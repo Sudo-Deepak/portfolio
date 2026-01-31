@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Deepak Kumar | Senior Software Developer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- SEO -->
+    <meta name="description"
+        content="Senior Software Developer with 4+ years experience in Java, Spring Boot, Microservices, AWS, SAP">
+    <meta name="keywords" content="Senior Java Developer, Spring Boot, Microservices">
+    <meta name="author" content="Deepak Kumar">
+
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { inter: ['Inter', 'sans-serif'] },
+                    colors: {
+                        base: '#0b1120',
+                        card: '#111827',
+                        primary: '#2563eb',
+                        secondary: '#9ca3af',
+                        border: '#1f2937'
+                    },
+                    boxShadow: {
+                        glow: '0 0 25px rgba(37,99,235,0.35)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- <script>
+        window.addEventListener("load", () => {
+            const initialScroll = window.scrollY;
+
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    window.scrollTo({ top: initialScroll + 200, behavior: "smooth" });
+
+                    setTimeout(() => {
+                        window.scrollTo({ top: initialScroll, behavior: "smooth" });
+                    }, 600);
+                }, 1200);
+            });
+        });
+    </script> -->
+
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body.light {
+            background-color: #f9fafb;
+            color: #111827;
+        }
+
+        body.light .bg-base {
+            background-color: #f9fafb;
+        }
+
+        body.light .bg-card {
+            background-color: #ffffff;
+        }
+
+        body.light .text-secondary {
+            color: #4b5563;
+        }
+
+        body.light .border-border {
+            border-color: #e5e7eb;
+        }
+
+        body.light nav {
+            background-color: rgba(249, 250, 251, 0.85);
+        }
+
+        body.light #custom-btn {
+            background-color: #3b82f6;
+        }
+
+        .project-img {
+            filter: blur(12px);
+            transform: scale(1.05);
+            transition: filter 0.4s ease, transform 0.4s ease;
+        }
+
+        .project-img[src] {
+            filter: blur(0);
+            transform: scale(1);
+        }
+
+        /* Hover polish */
+        .group:hover {
+            transform: translateY(-2px);
+            transition: transform 0.25s ease;
+        }
+
+        /* Theme-safe blur loading */
+        .project-img {
+            filter: blur(12px);
+            transition: filter 0.4s ease, transform 0.3s ease;
+        }
+
+        .project-img[src] {
+            filter: blur(0);
+        }
+
+        /* Card hover polish */
+        section .bg-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        section .bg-card:hover {
+            transform: translateY(-4px);
+        }
+
+        /* Button micro interaction */
+        button,
+        a {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        button:hover,
+        a:hover {
+            transform: translateY(-1px);
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border: 1px solid #d1d5db;
+            /* light gray border */
+            border-radius: 0.5rem;
+            /* light background */
+            transition: all 0.2s ease;
+        }
+
+        body.dark .badge {
+            border-color: #374151;
+            background-color: #1f2937;
+            color: #f9fafb;
+        }
+
+        /* Scroll indicator polish */
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(8px);
+            }
+        }
+
+        .animate-bounce {
+            animation: bounce 1.6s infinite;
+        }
+    </style>
+
+    <script>
+        function toggleMenu() {
+            document.getElementById("mobileMenu").classList.toggle("hidden")
+        }
+
+        function closeMenu() {
+            document.getElementById("mobileMenu").classList.add("hidden")
+        }
+
+        function toggleTheme() {
+            const body = document.body
+            const isLight = body.classList.toggle("light")
+            const icon = isLight ? "moon" : "sun"
+
+            document.getElementById("themeIcon").setAttribute("data-lucide", icon)
+            document.getElementById("mobileThemeIcon").setAttribute("data-lucide", icon)
+
+            lucide.createIcons()
+        }
+        const RESUME_URL = "https://drive.google.com/uc?export=download&id=1EDuLlKp27Vg3TNdEJDpoMGJx3Sj4cz8X";
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body class="bg-base text-white font-inter">
+    <!-- NAVBAR -->
+    <nav class="fixed top-0 w-full z-50 backdrop-blur bg-base/80 border-b border-border">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+
+            <!-- Logo -->
+            <h1 class="font-bold text-lg"><a href="#">Deepak Kumar</a></h1>
+
+            <!-- Desktop Menu -->
+            <ul class="hidden md:flex items-center gap-8 text-secondary">
+                <li><a href="#about" class="font-normal hover:font-bold transition-all duration-200">About Me</a></li>
+                <li><a href="#skills" class="font-normal hover:font-bold transition-all duration-200">Expertise</a></li>
+                <li><a href="#experience" class="font-normal hover:font-bold transition-all duration-200">Experience</a>
+                </li>
+                <li><a href="#projects" class="font-normal hover:font-bold transition-all duration-200">Projects</a>
+                </li>
+                <li><a href="#contact" class="font-normal hover:font-bold transition-all duration-200">Contact</a></li>
+            </ul>
+
+            <!-- Right Controls -->
+            <div class="flex items-center gap-3">
+
+                <!-- Theme Toggle -->
+                <button onclick="toggleTheme()"
+                    class="p-2 rounded-lg border border-border text-secondary hover:text-white">
+                    <i id="themeIcon" data-lucide="sun"></i>
+                </button>
+
+                <!-- Resume Button (Desktop) -->
+                <a id="custom-btn" href="#"
+                    class="hidden md:inline-block px-4 py-2 bg-primary rounded-lg font-semibold shadow-glow"
+                    onclick="window.location.href=RESUME_URL">
+                    Resume
+                </a>
+
+                <!-- Hamburger -->
+                <button onclick="toggleMenu()" class="md:hidden p-2 rounded-lg border border-border text-secondary">
+                    <i data-lucide="menu"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="hidden md:hidden bg-base px-6 py-6 space-y-4 text-center">
+            <a onclick="closeMenu()" href="#about"
+                class="block w-full text-secondary border border-border rounded-lg px-3 py-2">
+                About Me
+            </a>
+            <a onclick="closeMenu()" href="#skills"
+                class="block w-full text-secondary border border-border rounded-lg px-3 py-2">
+                Skills
+            </a>
+            <a onclick="closeMenu()" href="#experience"
+                class="block w-full text-secondary border border-border rounded-lg px-3 py-2">
+                Experience
+            </a>
+            <a onclick="closeMenu()" href="#projects"
+                class="block w-full text-secondary border border-border rounded-lg px-3 py-2">
+                Projects
+            </a>
+            <a onclick="closeMenu()" href="#contact"
+                class="block w-full text-secondary border border-border rounded-lg px-3 py-2">
+                Contact
+            </a>
+            <div class="flex items-center gap-3 w-full">
+                <!-- Mobile Theme Toggle -->
+                <button onclick="toggleTheme()"
+                    class="flex-1 flex items-center justify-center gap-2 text-secondary border border-border rounded-lg px-3 py-2">
+                    <i id="mobileThemeIcon" data-lucide="moon"></i>
+                    <span>Toggle Theme</span>
+                </button>
+
+                <!-- Mobile Resume -->
+                <a id="custom-btn" href="#"
+                    class="flex-1 flex items-center justify-center px-4 py-2 bg-primary rounded-lg font-semibold shadow-glow"
+                    onclick="window.location.href=RESUME_URL">
+                    Download Resume
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="min-h-screen flex items-center justify-center text-center px-6 pt-24 relative">
+        <div>
+            <h2 class="text-5xl font-extrabold leading-tight">
+                Hi, I'm Deepak Kumar
+            </h2>
+
+            <p class="mt-6 max-w-2xl mx-auto text-secondary">
+                Senior Software Developer building <span class="text-primary font-semibold">scalable, secure, </span>and
+                <span class="text-primary font-semibold">high-performance systems</span> using <span
+                    class="text-primary font-semibold">modern
+                    technologies</span>.
+                I design <span class="text-primary font-semibold">robust backend architectures</span> while contributing
+                to <span class="text-primary font-semibold">end-to-end, production-ready solutions</span> that deliver
+                seamless user experiences.
+            </p>
+
+            <!-- Resume & Contact -->
+            <p class="mt-6 max-w-2xl mx-auto">
+                <a id="custom-btn" href="#what-i-build"
+                    class="ml-2 md:inline-block px-4 py-2 bg-primary rounded-lg font-semibold shadow-glow mt-6">
+                    What I Build
+                </a>
+
+                <a id="custom-btn" href="#"
+                    class=" md:inline-block ml-2 px-4 py-2 bg-primary rounded-lg font-semibold shadow-glow"
+                    onclick="window.location.href=RESUME_URL">
+                    Resume
+                </a>
+
+                <a id="custom-btn" href="#contact"
+                    class="ml-2 md:inline-block px-4 py-2 bg-primary rounded-lg font-semibold shadow-glow mt-6">
+                    Let's Build Something
+                </a>
+            </p>
+        </div>
+
+        <!-- Scroll Indicator (new) -->
+        <div class="absolute bottom-10 flex flex-col items-center cursor-pointer animate-bounce"
+            onclick="document.querySelector('#about').scrollIntoView({ behavior: 'smooth' })">
+            <span class="text-secondary text-sm mb-1">Scroll</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-secondary" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+        </div>
+    </section>
+
+    <!-- ABOUT ME -->
+    <section id="about" class="py-20 bg-card mx-auto px-6">
+
+        <h2 class="text-3xl font-bold mb-8 text-center">About Me</h2>
+
+        <div class="max-w-4xl mx-auto text-center text-secondary mb-12 space-y-2">
+            <p>
+                I design and build robust backend systems using Java, Spring Boot, and Spring AI,
+                focusing on scalability, reliability, and maintainability.
+            </p>
+
+            <p>
+                I deliver integration-driven solutions with payment platforms, file storage, payroll systems,
+                and other third-party services, ensuring smooth, production-ready workflows.
+            </p>
+
+            <p>
+                As a full-stack collaborator, I contribute to backend-first architectures and effective cross-stack
+                coordination.
+            </p>
+
+            <p>
+                I work closely with teams and stakeholders to turn ideas into functional, high-quality applications
+                that meet real-world business needs.
+            </p>
+        </div>
+
+        <!-- Metrics Cards -->
+        <div class="max-w-5xl mx-auto grid md:grid-cols-3 gap-8 text-center px-6 justify-items-center">
+
+            <div class="p-6 bg-card rounded-xl border border-border hover:shadow-glow transition">
+                <h3 class="text-4xl font-bold text-primary counter" data-target="4" data-suffix="+">0</h3>
+                <p class="text-secondary mt-2">
+                    Years of Professional Experience
+                </p>
+            </div>
+
+            <div class="p-6 bg-card rounded-xl border border-border hover:shadow-glow transition">
+                <h3 class="text-4xl font-bold text-primary counter" data-target="300" data-suffix="+">0</h3>
+                <p class="text-secondary mt-2">
+                    Secure APIs & Integrations Delivered
+                </p>
+            </div>
+
+            <div class="p-6 bg-card rounded-xl border border-border hover:shadow-glow transition">
+                <h3 class="text-4xl font-bold text-primary counter" data-target="70" data-prefix="~" data-suffix="%">0
+                </h3>
+                <p class="text-secondary mt-2">
+                    Improvement in System Performance
+                </p>
+            </div>
+
+            <div class="p-6 bg-card rounded-xl border border-border hover:shadow-glow transition">
+                <h3 class="text-4xl font-bold text-primary counter" data-target="15" data-suffix="+">0</h3>
+                <p class="text-secondary mt-2">
+                    Standalone, Microservices & Cloud-native Systems Built
+                </p>
+            </div>
+
+            <!-- Less than 4, these will be centered automatically -->
+            <div class="p-6 bg-card rounded-xl border border-border hover:shadow-glow transition">
+                <h3 class="text-4xl font-bold text-primary counter" data-target="10" data-suffix="+">0</h3>
+                <p class="text-secondary mt-2">
+                    Core Technologies Used
+                </p>
+            </div>
+
+            <div class="p-6 bg-card rounded-xl border border-border hover:shadow-glow transition">
+                <h3 class="text-4xl font-bold text-primary counter" data-target="3" data-suffix="+">0</h3>
+                <p class="text-secondary mt-2">
+                    Academic Awards
+                </p>
+            </div>
+
+        </div>
+
+        <!-- Subtle CTA -->
+        <p class="text-secondary text-center mx-auto mt-12">
+            Open to collaborating on backend-focused, integration-heavy, or full-stack projects.
+        </p>
+    </section>
+
+    <!-- WHAT I BUILD -->
+    <section id="what-i-build" class="py-24 max-w-6xl mx-auto px-6">
+        <h2 class="text-3xl font-bold mb-12 text-center">What I Build</h2>
+
+        <div class="grid md:grid-cols-4 gap-8 justify-items-center text-center">
+
+            <!-- Enterprise Backend Systems -->
+            <div class="p-5 bg-card rounded-xl border border-border hover:shadow-glow transition w-full max-w-xs">
+                <h3 class="font-semibold text-lg mb-3">Enterprise Backend Systems</h3>
+                <p class="text-secondary text-sm">
+                    High-performance APIs, microservices, and database-driven platforms built for scale, reliability,
+                    and secure business-critical workflows.
+                </p>
+            </div>
+
+            <!-- Business & Third-Party Integrations -->
+            <div class="p-5 bg-card rounded-xl border border-border hover:shadow-glow transition w-full max-w-xs">
+                <h3 class="font-semibold text-lg mb-3">Business & Integrations</h3>
+                <p class="text-secondary text-sm">
+                    Payment processing, file/document management, payroll systems, and external service integrations
+                    delivered to streamline operations and reduce errors.
+                </p>
+            </div>
+
+            <!-- Full-Stack Solutions -->
+            <div class="p-5 bg-card rounded-xl border border-border hover:shadow-glow transition w-full max-w-xs">
+                <h3 class="font-semibold text-lg mb-3">Full-Stack Solutions</h3>
+                <p class="text-secondary text-sm">
+                    Backend-first systems designed for smooth API consumption, practical frontend collaboration, and
+                    end-to-end, production-ready digital experiences.
+                </p>
+            </div>
+
+            <!-- Smart Automation / AI Enhancements -->
+            <div class="p-5 bg-card rounded-xl border border-border hover:shadow-glow transition w-full max-w-xs">
+                <h3 class="font-semibold text-lg mb-3">Smart Automation & AI</h3>
+                <p class="text-secondary text-sm">
+                    Intelligent workflows and automation features using Spring AI and data-driven techniques to improve
+                    efficiency and user experience.
+                </p>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- METRICS -->
+    <!-- <section class="py-20 bg-card mx-auto px-6">
+        <h2 class="text-3xl font-bold mb-12 text-center">Metrics</h2>
+        <div class="max-w-5xl mx-auto grid md:grid-cols-3 gap-8 text-center px-6">
+            <div class="p-6 bg-base rounded-xl border border-border hover:shadow-glow">
+                <h3 class="text-4xl font-bold text-primary counter" data-target="40">0</h3>
+                <p class="text-secondary mt-2">Accuracy Improvement</p>
+            </div>
+            <div class="p-6 bg-base rounded-xl border border-border hover:shadow-glow">
+                <h3 class="text-4xl font-bold text-primary counter" data-target="60">0</h3>
+                <p class="text-secondary mt-2">DB Performance Boost</p>
+            </div>
+            <div class="p-6 bg-base rounded-xl border border-border hover:shadow-glow">
+                <h3 class="text-4xl font-bold text-primary counter" data-target="45">0</h3>
+                <p class="text-secondary mt-2">Memory Reduction</p>
+            </div>
+        </div>
+    </section> -->
+
+    <!-- SKILLS -->
+    <section id="skills" class="py-24 bg-card mx-auto px-6">
+        <div class="max-w-5xl mx-auto">
+            <h2 class="text-3xl font-bold mb-12 text-center">Technical Skills</h2>
+
+            <div class="grid md:grid-cols-3 gap-6 justify-items-center">
+
+                <!-- Languages -->
+                <div
+                    class="p-6 bg-card rounded-xl border border-border hover:shadow-glow w-full max-w-xs transition flex flex-col min-h-[220px]">
+                    <div class="flex items-center justify-center gap-2 mb-4">
+                        <i data-lucide="code-2" class="text-primary text-2xl"></i>
+                        <h3 class="font-semibold text-lg">Languages</h3>
+                    </div>
+                    <div class="flex flex-wrap justify-center items-center content-center gap-2 flex-1">
+                        <span class="badge">Java</span>
+                        <span class="badge">SQL</span>
+                        <span class="badge">JavaScript</span>
+                    </div>
+                </div>
+
+                <!-- Frameworks & Libraries -->
+                <div
+                    class="p-5 bg-card rounded-xl border border-border hover:shadow-glow w-full max-w-xs transition flex flex-col min-h-[220px]">
+                    <div class="flex items-center justify-center gap-2 mb-4">
+                        <i data-lucide="cpu" class="text-primary text-2xl"></i>
+                        <h3 class="font-semibold text-lg">Frameworks & Libraries</h3>
+                    </div>
+                    <div class="flex flex-wrap justify-center items-center content-center gap-2 flex-1">
+                        <span class="badge">Spring</span>
+                        <span class="badge">Spring Boot</span>
+                        <span class="badge">Spring Cloud</span>
+                        <span class="badge">Spring Security</span>
+                        <span class="badge">Spring Data JPA</span>
+                        <span class="badge">Hibernate</span>
+                    </div>
+                </div>
+
+                <!-- Frontend & Full-Stack -->
+                <div
+                    class="p-5 bg-card rounded-xl border border-border hover:shadow-glow w-full max-w-xs transition flex flex-col min-h-[220px]">
+                    <div class="flex items-center justify-center gap-2 mb-4">
+                        <i data-lucide="layout" class="text-primary text-2xl"></i>
+                        <h3 class="font-semibold text-lg">Frontend Technologies</h3>
+                    </div>
+                    <div class="flex flex-wrap justify-center items-center content-center gap-2 flex-1">
+                        <span class="badge">React JS</span>
+                        <span class="badge">HTML</span>
+                        <span class="badge">CSS</span>
+                    </div>
+                </div>
+
+                <!-- Databases -->
+                <div
+                    class="p-5 bg-card rounded-xl border border-border hover:shadow-glow w-full max-w-xs transition flex flex-col min-h-[220px]">
+                    <div class="flex items-center justify-center gap-2 mb-4">
+                        <i data-lucide="database" class="text-primary text-2xl"></i>
+                        <h3 class="font-semibold text-lg">Databases</h3>
+                    </div>
+                    <div class="flex flex-wrap justify-center items-center content-center gap-2 flex-1">
+                        <span class="badge">MySQL</span>
+                        <span class="badge">PostgreSQL</span>
+                        <span class="badge">MongoDB</span>
+                        <span class="badge">SAP HANA</span>
+                    </div>
+                </div>
+
+                <!-- Messaging & Integrations -->
+                <div
+                    class="p-5 bg-card rounded-xl border border-border hover:shadow-glow w-full max-w-xs transition flex flex-col min-h-[220px]">
+                    <div class="flex items-center justify-center gap-2 mb-4">
+                        <i data-lucide="repeat" class="text-primary text-2xl"></i>
+                        <h3 class="font-semibold text-lg">Messaging & Integrations</h3>
+                    </div>
+                    <div class="flex flex-wrap justify-center items-center content-center gap-2 flex-1">
+                        <span class="badge">Apache Kafka</span>
+                        <span class="badge">RabbitMQ</span>
+                        <span class="badge">Stripe</span>
+                        <span class="badge">Box</span>
+                        <span class="badge">OpenText</span>
+                        <span class="badge">Staffology</span>
+                    </div>
+                </div>
+
+                <!-- Cloud & DevOps -->
+                <div
+                    class="p-5 bg-card rounded-xl border border-border hover:shadow-glow w-full max-w-xs transition flex flex-col min-h-[220px]">
+                    <div class="flex items-center justify-center gap-2 mb-4">
+                        <i data-lucide="cloud" class="text-primary text-2xl"></i>
+                        <h3 class="font-semibold text-lg">Cloud & DevOps</h3>
+                    </div>
+                    <div class="flex flex-wrap justify-center items-center content-center gap-2 flex-1">
+                        <span class="badge">AWS</span>
+                        <span class="badge">Docker</span>
+                        <span class="badge">Jenkins</span>
+                        <span class="badge">CI/CD</span>
+                    </div>
+                </div>
+
+                <!-- SAP & Enterprise -->
+                <div
+                    class="p-5 bg-card rounded-xl border border-border hover:shadow-glow w-full max-w-xs transition flex flex-col min-h-[220px]">
+                    <div class="flex items-center justify-center gap-2 mb-4">
+                        <i data-lucide="server" class="text-primary text-2xl"></i>
+                        <h3 class="font-semibold text-lg">SAP & Enterprise</h3>
+                    </div>
+                    <div class="flex flex-wrap justify-center items-center content-center gap-2 flex-1">
+                        <span class="badge">CDS</span>
+                        <span class="badge">OData</span>
+                        <span class="badge">CQN</span>
+                        <span class="badge">SAP BTP</span>
+                        <span class="badge">CAP</span>
+                    </div>
+                </div>
+
+                <!-- Tools & Testing -->
+                <div
+                    class="p-5 bg-card rounded-xl border border-border hover:shadow-glow w-full max-w-xs transition flex flex-col min-h-[220px]">
+                    <div class="flex items-center justify-center gap-2 mb-4">
+                        <i data-lucide="laptop" class="text-primary text-2xl"></i>
+                        <h3 class="font-semibold text-lg">Tools & Testing</h3>
+                    </div>
+                    <div class="flex flex-wrap justify-center items-center content-center gap-2 flex-1">
+                        <span class="badge">Git</span>
+                        <span class="badge">Maven</span>
+                        <span class="badge">Gradle</span>
+                        <span class="badge">Postman</span>
+                        <span class="badge">Jira</span>
+                        <span class="badge">JUnit</span>
+                        <span class="badge">Mockito</span>
+                        <span class="badge">IntelliJ IDEA</span>
+                        <span class="badge">VS Code</span>
+                        <span class="badge">DBeaver</span>
+                        <span class="badge">IntelliJ Profiler</span>
+                    </div>
+                </div>
+
+                <!-- Architecture & Design -->
+                <div
+                    class="p-5 bg-card rounded-xl border border-border hover:shadow-glow w-full max-w-xs transition flex flex-col min-h-[220px]">
+                    <div class="flex items-center justify-center gap-2 mb-4">
+                        <i data-lucide="layout-dashboard" class="text-primary text-2xl"></i>
+                        <h3 class="font-semibold text-lg">Architecture & Design</h3>
+                    </div>
+                    <div class="flex flex-wrap justify-center items-center content-center gap-2 flex-1">
+                        <span class="badge">Microservices</span>
+                        <span class="badge">Event-Driven Architecture</span>
+                        <span class="badge">REST APIs</span>
+                        <span class="badge">GraphQL APIs</span>
+                        <span class="badge">WebSocket</span>
+                        <span class="badge">OOP</span>
+                        <span class="badge">Design Patterns</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- EXPERIENCE -->
+    <section id="experience" class="py-24 max-w-7xl mx-auto px-6">
+        <div class="max-w-5xl mx-auto px-6">
+            <h2 class="text-3xl font-bold mb-12 text-center">Experience</h2>
+
+            <div class="relative border-l-4 border-primary pl-10 space-y-14">
+
+                <!-- AsInt -->
+                <div class="relative">
+                    <span class="absolute -left-[52px] top-1 w-5 h-5 bg-primary rounded-full shadow-glow"></span>
+
+                    <h3 class="font-semibold text-lg">Senior Developer - <a href="https://asint.net"
+                            target="_blank">AsInt, Inc.</a></h3>
+                    <p class="text-secondary text-sm">Aug 2024 – Present</p>
+
+                    <p class="mt-3 text-secondary">
+                        Leading backend development for an enterprise Asset Integrity Suite in the Oil & Gas domain,
+                        building scalable workflows integrated with SAP S/4HANA and SAP HANA.
+                    </p>
+
+                    <!-- Impact -->
+                    <p class="mt-2 text-sm text-secondary">
+                        • Improved calculation accuracy and system performance by ~40% • Reduced memory usage by ~60%
+                        • Optimized database latency by ~30%
+                    </p>
+
+                    <!-- Mentorship -->
+                    <p class="mt-2 text-sm text-secondary">
+                        • Mentored interns and junior engineers • Contributed to internal training and code quality
+                        standards
+                    </p>
+                </div>
+
+                <!-- Coditas - Software Engineer -->
+                <div class="relative">
+                    <span class="absolute -left-[52px] top-1 w-5 h-5 bg-primary rounded-full shadow-glow"></span>
+
+                    <h3 class="font-semibold text-lg">Software Engineer - <a href="https://coditas.com"
+                            target="_blank">Coditas Solutions LLP</a></h3>
+                    <p class="text-secondary text-sm">Oct 2023 – Jul 2024</p>
+
+                    <p class="mt-3 text-secondary">
+                        Delivered secure and scalable backend systems across healthcare, HR, and enterprise platforms,
+                        focusing on microservices, API performance, and cloud deployments.
+                    </p>
+
+                    <!-- Impact -->
+                    <p class="mt-2 text-sm text-secondary">
+                        • Reduced system downtime by ~40% • Improved database performance by ~60%
+                        • Cut rule implementation effort by ~50%
+                    </p>
+                </div>
+
+                <!-- Coditas - Associate Software Engineer -->
+                <div class="relative">
+                    <span class="absolute -left-[52px] top-1 w-5 h-5 bg-primary rounded-full shadow-glow"></span>
+
+                    <h3 class="font-semibold text-lg">Associate Software Engineer - <a href="https://coditas.com"
+                            target="_blank">Coditas Solutions LLP</a></h3>
+                    <p class="text-secondary text-sm">Jan 2022 – Sep 2023</p>
+
+                    <p class="mt-3 text-secondary">
+                        Built and maintained backend APIs and services while collaborating with cross-functional teams
+                        to deliver production-ready features in agile environments.
+                    </p>
+
+                    <!-- Impact -->
+                    <p class="mt-2 text-sm text-secondary">
+                        • Reduced application load time by ~60% • Delivered stable integrations for multiple releases
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- PROJECTS -->
+    <section id="projects" class="py-24 bg-card max-auto mx-auto px-6">
+        <div class="max-w-7xl mx-auto px-6">
+            <h2 class="text-3xl font-bold mb-12 text-center">Projects</h2>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Project 1 -->
+                <div
+                    class="group relative p-6 bg-card rounded-xl border border-border overflow-hidden hover:shadow-glow transition">
+
+                    <!-- Card Content that will blur -->
+                    <div class="transition-transform duration-300 group-hover:scale-105 group-hover:blur-sm">
+                        <img src="/images/enterprise-asset.png" alt="Enterprise Asset Management Platform"
+                            loading="lazy" class="rounded-lg object-cover h-48 w-full mb-4 project-img" />
+
+                        <h3 class="font-semibold text-lg">Enterprise Asset Management Platform</h3>
+                        <p class="text-secondary text-sm">
+                            High-performance backend platform for asset tracking, monitoring, and calculations.
+                        </p>
+                        <p class="text-secondary text-sm mt-2">
+                            API-driven system streamlining asset monitoring, event tracking, and operational workflows.
+                        </p>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            <span class="badge">Java</span>
+                            <span class="badge">Spring Boot</span>
+                            <span class="badge">REST APIs</span>
+                            <span class="badge">Microservices</span>
+                            <span class="badge">SAP S/4HANA</span>
+                            <span class="badge">SAP HANA</span>
+                            <span class="badge">CDS</span>
+                            <span class="badge">OData</span>
+                            <span class="badge">Enterprise Integrations</span>
+                            <span class="badge">OpenText</span>
+                            <span class="badge">Performance Optimization</span>
+                            <span class="badge">Design Patterns</span>
+                        </div>
+                    </div>
+
+                    <div
+                        class="absolute inset-0 bg-card opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-6 flex flex-col justify-center rounded-xl">
+                        <ul class="space-y-3 text-xl text-secondary mx-auto w-fit text-left">
+                            <li class="flex gap-2">
+                                <span>• High-volume enterprise asset tracking</span>
+                            </li>
+                            <li class="flex gap-2">
+                                <span>• Complex calculations & monitoring workflows</span>
+                            </li>
+                            <li class="flex gap-2">
+                                <span>• Optimized performance & memory usage</span>
+                            </li>
+                            <li class="flex gap-2">
+                                <span>• Modular, maintainable API design</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Project 2 -->
+                <div
+                    class="group relative p-6 bg-card rounded-xl border border-border overflow-hidden hover:shadow-glow transition">
+                    <div class="transition-transform duration-300 group-hover:scale-105 group-hover:blur-sm">
+                        <img src="/images/healthcare-saas.png" alt="Secure Healthcare SaaS Platform" loading="lazy"
+                            class="rounded-lg object-cover h-48 w-full mb-4 project-img" />
+
+                        <h3 class="font-semibold text-lg">Secure Healthcare SaaS Platform</h3>
+                        <p class="text-secondary text-sm">
+                            SaaS platform for secure file management, payments, and patient workflows.
+                        </p>
+                        <p class="text-secondary text-sm mt-2">
+                            API-driven system managing subscriptions, access control, and multi-tenant operations.
+                        </p>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            <span class="badge">Java</span>
+                            <span class="badge">Spring Boot</span>
+                            <span class="badge">Microservices</span>
+                            <span class="badge">REST APIs</span>
+                            <span class="badge">PostgreSQL</span>
+                            <span class="badge">MongoDB</span>
+                            <span class="badge">RabbitMQ</span>
+                            <span class="badge">Stripe</span>
+                            <span class="badge">Box API</span>
+                            <span class="badge">AWS EC2</span>
+                            <span class="badge">AWS S3</span>
+                            <span class="badge">CloudFront</span>
+                            <span class="badge">Spring Cloud</span>
+                            <span class="badge">API Gateway</span>
+                            <span class="badge">Role-Based Access</span>
+                            <span class="badge">Subscription Systems</span>
+                        </div>
+                    </div>
+
+                    <div
+                        class="absolute inset-0 bg-card opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-6 flex flex-col justify-center rounded-xl">
+                        <ul class="space-y-3 text-xl text-secondary mx-auto w-fit text-left">
+                            <li class="flex gap-2">• Subscription & payment management</li>
+                            <li class="flex gap-2">• Secure file storage & access control</li>
+                            <li class="flex gap-2">• Multi-tenant & role-based architecture</li>
+                            <li class="flex gap-2">• Designed for scalability & security</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Project 3 -->
+                <div
+                    class="group relative p-6 bg-card rounded-xl border border-border overflow-hidden hover:shadow-glow transition">
+                    <div class="transition-transform duration-300 group-hover:scale-105 group-hover:blur-sm">
+                        <img src="/images/workforce-payroll.png" alt="Workforce & Payroll Management System"
+                            loading="lazy" class="rounded-lg object-cover h-48 w-full mb-4 project-img" />
+
+                        <h3 class="font-semibold text-lg">Workforce & Payroll Management System</h3>
+                        <p class="text-secondary text-sm">
+                            Backend system automating payroll, attendance, and operational workflows.
+                        </p>
+                        <p class="text-secondary text-sm mt-2">
+                            API-driven platform streamlining employee scheduling, payroll generation, and HR operations.
+                        </p>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            <span class="badge">Java</span>
+                            <span class="badge">Spring Boot</span>
+                            <span class="badge">Spring Security</span>
+                            <span class="badge">JWT</span>
+                            <span class="badge">REST APIs</span>
+                            <span class="badge">MySQL</span>
+                            <span class="badge">AWS S3</span>
+                            <span class="badge">AWS RDS</span>
+                            <span class="badge">CloudFront</span>
+                            <span class="badge">Payroll Integration</span>
+                            <span class="badge">Staffology</span>
+                        </div>
+                    </div>
+
+                    <div
+                        class="absolute inset-0 bg-card opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-6 flex flex-col justify-center rounded-xl">
+                        <ul class="space-y-3 text-xl text-secondary mx-auto w-fit text-left">
+                            <li class="flex gap-2">• Automated payroll & invoice workflows</li>
+                            <li class="flex gap-2">• Shift scheduling & attendance tracking</li>
+                            <li class="flex gap-2">• Secure role-based access & authorization</li>
+                            <li class="flex gap-2">• Streamlined operational processes</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Project 4 -->
+                <div
+                    class="group relative p-6 bg-card rounded-xl border border-border overflow-hidden hover:shadow-glow transition">
+                    <div class="transition-transform duration-300 group-hover:scale-105 group-hover:blur-sm">
+                        <img src="/images/interview-scheduler.png" alt="Interview Scheduling Platform" loading="lazy"
+                            class="rounded-lg object-cover h-48 w-full mb-4 project-img" />
+
+                        <h3 class="font-semibold text-lg">Interview Scheduling & Coordination Platform</h3>
+                        <p class="text-secondary text-sm">
+                            Platform for scheduling interviews, feedback collection, and candidate management.
+                        </p>
+                        <p class="text-secondary text-sm mt-2">
+                            API-driven system streamlining interview slots, evaluation workflows, and recruiter
+                            dashboards.
+                        </p>
+                        <div class="flex flex-wrap gap-2 mt-2"><span class="badge">Java</span>
+                            <span class="badge">Spring Boot</span>
+                            <span class="badge">REST APIs</span>
+                            <span class="badge">MySQL</span>
+                            <span class="badge">Spring Data JPA</span>
+                            <span class="badge">Hibernate</span>
+                            <span class="badge">Intern Management</span>
+                            <span class="badge">Mentor Mapping</span>
+                            <span class="badge">Performance Tracking</span>
+                        </div>
+                    </div>
+
+                    <div
+                        class="absolute inset-0 bg-card opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-6 flex flex-col justify-center rounded-xl">
+                        <ul class="space-y-3 text-xl text-secondary mx-auto w-fit text-left">
+                            <li class="flex gap-2">• Automated interview slot booking</li>
+                            <li class="flex gap-2">• Candidate & recruiter dashboards</li>
+                            <li class="flex gap-2">• Evaluation & feedback workflows</li>
+                            <li class="flex gap-2">• Improved recruitment efficiency</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Project 5 -->
+                <div
+                    class="group relative p-6 bg-card rounded-xl border border-border overflow-hidden hover:shadow-glow transition">
+                    <div class="transition-transform duration-300 group-hover:scale-105 group-hover:blur-sm">
+                        <img src="/images/learning-platform.png" alt="Learning & Development Platform" loading="lazy"
+                            class="rounded-lg object-cover h-48 w-full mb-4 project-img" />
+
+                        <h3 class="font-semibold text-lg">Learning & Development Platform</h3>
+                        <p class="text-secondary text-sm">
+                            Platform to manage interns, training, and performance reporting.
+                        </p>
+                        <p class="text-secondary text-sm mt-2">
+                            API-driven system streamlining mentorship, batch-level training, and daily tracking.
+                        </p>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            <span class="badge">Java</span>
+                            <span class="badge">Spring Boot</span>
+                            <span class="badge">REST APIs</span>
+                            <span class="badge">MySQL</span>
+                            <span class="badge">Liquibase</span>
+                            <span class="badge">Google Services</span>
+                            <span class="badge">Scheduling Systems</span>
+                            <span class="badge">Recruitment Workflows</span>
+                        </div>
+                    </div>
+
+                    <div
+                        class="absolute inset-0 bg-card opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-6 flex flex-col justify-center rounded-xl">
+                        <ul class="space-y-3 text-xl text-secondary mx-auto w-fit text-left">
+                            <li class="flex gap-2">• Intern lifecycle & performance tracking</li>
+                            <li class="flex gap-2">• Batch-level training organisation</li>
+                            <li class="flex gap-2">• Mentor mapping & reporting</li>
+                            <li class="flex gap-2">• Streamlined learning workflows</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact" class="py-24 max-w-7xl mx-auto px-6">
+        <h2 class="text-3xl font-bold mb-12 text-center">Let’s Connect</h2>
+
+        <div class="grid md:grid-cols-2 gap-12 items-start">
+
+            <!-- LEFT : Contact Info -->
+            <div class="space-y-6">
+
+                <p class="text-secondary text-lg">
+                    For collaborations or discussions, feel free to reach out. 👋
+                </p>
+
+                <!-- Email -->
+                <div class="flex items-center gap-4">
+                    <i data-lucide="mail" class="text-primary text-2xl"></i>
+                    <a href="mailto:deepakprajapati.officials@gmail.com" class="text-lg hover:text-primary transition">
+                        deepakprajapati.officials@gmail.com
+                    </a>
+                </div>
+
+                <!-- Phone (Optional) -->
+                <!-- <div class="flex items-center gap-4">
+                    <i data-lucide="phone" class="text-primary text-2xl"></i>
+                    <span class="text-lg text-secondary">
+                        +91 95465 79738
+                    </span>
+                </div> -->
+
+                <!-- Social Links -->
+                <div class="pt-4">
+                    <p class="text-sm uppercase tracking-wider text-secondary mb-3">
+                        Find me on
+                    </p>
+
+                    <div class="flex gap-4">
+                        <a href="https://linkedin.com/in/deepak-kumar-8362b1154" target="_blank"
+                            class="p-3 border border-border rounded-lg hover:shadow-glow transition">
+                            <i data-lucide="linkedin" class="text-primary"></i>
+                        </a>
+
+                        <a href="https://github.com/Sudo-Deepak" target="_blank"
+                            class="p-3 border border-border rounded-lg hover:shadow-glow transition">
+                            <i data-lucide="github" class="text-primary"></i>
+                        </a>
+
+                        <a href="https://www.youtube.com/@JavaRevisit" target="_blank"
+                            class="p-3 border border-border rounded-lg hover:shadow-glow transition">
+                            <i data-lucide="youtube" class="text-primary"></i>
+                        </a>
+
+                        <a href="https://www.instagram.com/java.revisit" target="_blank"
+                            class="p-3 border border-border rounded-lg hover:shadow-glow transition">
+                            <i data-lucide="instagram" class="text-primary"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <form id="contact-form" class="space-y-4 bg-card p-6 rounded-xl border border-border">
+
+                <input type="hidden" name="_subject" value="New Contact Message from Portfolio">
+                <input type="hidden" name="_captcha" value="false">
+                <input type="hidden" name="_template" value="table">
+
+                <input type="text" name="_honey" style="display:none">
+
+                <input type="text" name="name" placeholder="Your Name" required
+                    class="w-full p-3 bg-card border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-primary" />
+
+                <input type="email" name="email" placeholder="Your Email" required
+                    class="w-full p-3 bg-card border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-primary" />
+
+                <textarea name="message" rows="5" placeholder="Your Message" required
+                    class="w-full p-3 bg-card border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-primary"></textarea>
+
+                <button type="submit" id="submit-btn"
+                    class="w-full px-6 py-3 bg-primary rounded-lg font-semibold shadow-glow hover:opacity-90 transition disabled:opacity-50">
+                    Send Message
+                </button>
+
+                <p id="response-msg" class="text-sm text-center mt-2 hidden"></p>
+            </form>
+        </div>
+    </section>
+
+    <footer class="py-6 text-center text-secondary border-t border-border">
+        © 2026 Deepak Kumar
+    </footer>
+
+    <script>
+        lucide.createIcons()
+
+        document.querySelectorAll('.counter').forEach(counter => {
+            const target = +counter.dataset.target
+            const suffix = counter.dataset.suffix || '';
+            const prefix = counter.dataset.prefix || '';
+            let i = 0
+            const interval = setInterval(() => {
+                counter.innerText = prefix + i + suffix
+                if (target >= 70) {
+                    i += 10
+                } else {
+                    i++
+                }
+                if (i > target) clearInterval(interval)
+            }, 20)
+        })
+    </script>
+    <script>
+        const contactForm = document.getElementById('contact-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const responseMsg = document.getElementById('response-msg');
+
+        contactForm.addEventListener('submit', async (e) => {
+            e.preventDefault(); // Stop the page from redirecting
+
+            // UI State: Loading
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Sending...";
+            responseMsg.classList.add('hidden');
+
+            // Prepare data
+            const formData = new FormData(contactForm);
+
+            try {
+                const response = await fetch("https://formsubmit.co/ajax/c2f96278ee2468d87acc0b5221eb089d", {
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    // Success
+                    responseMsg.innerText = "Thanks! Your message has been sent.";
+                    responseMsg.className = "text-sm text-center mt-2 text-green-500 block";
+                    contactForm.reset();
+                } else {
+                    // Server error
+                    throw new Error();
+                }
+            } catch (error) {
+                // Network error
+                responseMsg.innerText = "Something went wrong. Please try again.";
+                responseMsg.className = "text-sm text-center mt-2 text-red-500 block";
+            } finally {
+                // Reset button state
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Send Message";
+            }
+        });
+    </script>
+
+</body>
+
+</html>
