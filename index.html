@@ -192,7 +192,7 @@
 
             lucide.createIcons()
         }
-        // const RESUME_URL = "https://drive.google.com/uc?export=download&id=1EDuLlKp27Vg3TNdEJDpoMGJx3Sj4cz8X";
+        const RESUME_URL = "https://drive.google.com/uc?export=download&id=1K159SX_b8MJlsEh3NKHTJ2td1EOoew6g";
     </script>
 
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
@@ -931,41 +931,37 @@
     </section>
 
     <!-- CONTACT -->
-    <section id="contact" class="py-24 max-w-7xl mx-auto px-6">
-        <h2 class="text-3xl font-bold mb-12 text-center">Let’s Connect</h2>
+    <section id="contact" class="py-16 md:py-24 max-w-7xl mx-auto px-4 sm:px-6">
+        <h2 class="text-2xl sm:text-3xl font-bold mb-10 text-center">
+            Let’s Connect
+        </h2>
 
-        <div class="grid md:grid-cols-2 gap-12 items-start">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-12 items-start">
 
             <!-- LEFT : Contact Info -->
-            <div class="space-y-6">
+            <div class="space-y-5">
 
-                <p class="text-secondary text-lg">
+                <p class="text-secondary text-base sm:text-lg">
                     For collaborations or discussions, feel free to reach out. 👋
                 </p>
 
                 <!-- Email -->
-                <div class="flex items-center gap-4">
-                    <i data-lucide="mail" class="text-primary text-2xl"></i>
-                    <a href="mailto:deepakprajapati.officials@gmail.com" class="text-lg hover:text-primary transition">
+                <div class="flex items-start gap-3 w-full">
+                    <i data-lucide="mail" class="text-primary text-xl shrink-0 mt-1"></i>
+
+                    <a href="mailto:deepakprajapati.officials@gmail.com"
+                        class="text-sm sm:text-base flex-1 min-w-0 break-all hover:text-primary transition">
                         deepakprajapati.officials@gmail.com
                     </a>
                 </div>
 
-                <!-- Phone (Optional) -->
-                <!-- <div class="flex items-center gap-4">
-                    <i data-lucide="phone" class="text-primary text-2xl"></i>
-                    <span class="text-lg text-secondary">
-                        +91 95465 79738
-                    </span>
-                </div> -->
-
                 <!-- Social Links -->
-                <div class="pt-4">
+                <div class="pt-3">
                     <p class="text-sm uppercase tracking-wider text-secondary mb-3">
                         Find me on
                     </p>
 
-                    <div class="flex gap-4">
+                    <div class="flex flex-wrap gap-3">
                         <a href="https://linkedin.com/in/deepak-kumar-8362b1154" target="_blank"
                             class="p-3 border border-border rounded-lg hover:shadow-glow transition">
                             <i data-lucide="linkedin" class="text-primary"></i>
@@ -989,25 +985,25 @@
                 </div>
             </div>
 
-            <form id="contact-form" class="space-y-4 bg-card p-6 rounded-xl border border-border">
+            <!-- RIGHT : Contact Form -->
+            <form id="contact-form" class="space-y-4 bg-card p-5 sm:p-6 rounded-xl border border-border w-full">
 
                 <input type="hidden" name="_subject" value="New Contact Message from Portfolio">
                 <input type="hidden" name="_captcha" value="false">
                 <input type="hidden" name="_template" value="table">
-
                 <input type="text" name="_honey" style="display:none">
 
-                <input type="text" name="name" placeholder="Your Name" required
-                    class="w-full p-3 bg-card border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-primary" />
+                <input type="text" name="name" placeholder="Your Name" required class="w-full p-3 text-sm sm:text-base bg-card border border-border rounded-lg
+                   focus:outline-none focus:ring-1 focus:ring-primary" />
 
-                <input type="email" name="email" placeholder="Your Email" required
-                    class="w-full p-3 bg-card border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-primary" />
+                <input type="email" name="email" placeholder="Your Email" required class="w-full p-3 text-sm sm:text-base bg-card border border-border rounded-lg
+                   focus:outline-none focus:ring-1 focus:ring-primary" />
 
-                <textarea name="message" rows="5" placeholder="Your Message" required
-                    class="w-full p-3 bg-card border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-primary"></textarea>
+                <textarea name="message" rows="5" placeholder="Your Message" required class="w-full p-3 text-sm sm:text-base bg-card border border-border rounded-lg
+                      focus:outline-none focus:ring-1 focus:ring-primary"></textarea>
 
-                <button type="submit" id="submit-btn"
-                    class="w-full px-6 py-3 bg-primary rounded-lg font-semibold shadow-glow hover:opacity-90 transition disabled:opacity-50">
+                <button type="submit" id="submit-btn" class="w-full px-6 py-3 bg-primary rounded-lg font-semibold shadow-glow
+                    hover:opacity-90 transition disabled:opacity-50">
                     Send Message
                 </button>
 
@@ -1015,6 +1011,7 @@
             </form>
         </div>
     </section>
+
 
     <footer class="py-6 text-center text-secondary border-t border-border">
         © 2026 Deepak Kumar
