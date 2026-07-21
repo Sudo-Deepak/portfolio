@@ -1,0 +1,95 @@
+---
+import SectionHeading from './SectionHeading.astro';
+import { metrics } from '../data/site';
+---
+
+<section id="about" class="mx-auto max-w-6xl px-6 py-24">
+  <SectionHeading
+    eyebrow="About Me"
+    title="I build backends that scale — and outcomes that matter"
+    subtitle="Senior backend engineer focused on systems that stay fast, reliable, and maintainable as they grow."
+  />
+
+  <div class="grid gap-12 lg:grid-cols-2 lg:items-center">
+    <div data-reveal class="space-y-4 text-slate-600 dark:text-slate-400">
+      <p>
+        I'm{' '}
+        <span class="font-semibold text-slate-900 dark:text-white">Deepak</span>{' '}— a{' '}
+        <span class="font-semibold text-slate-900 dark:text-white">Senior Software Developer</span>{' '}with{' '}
+        <span class="font-semibold text-slate-900 dark:text-white">4+ years</span>{' '}building scalable,
+        high-performance enterprise systems in{' '}
+        <span class="font-semibold text-slate-900 dark:text-white">Java and Spring Boot</span>. I care as much about
+        the business outcome as the code behind it.
+      </p>
+      <p>
+        My core strength is{' '}
+        <span class="font-semibold text-slate-900 dark:text-white">backend architecture</span>: microservices, secure
+        REST &amp; GraphQL APIs, and finely-tuned databases across SQL and NoSQL — wired to the platforms products
+        depend on, from SAP and payments to storage and payroll.
+      </p>
+      <p>
+        I've shipped across{' '}
+        <span class="font-semibold text-slate-900 dark:text-white">Oil &amp; Gas, healthcare, hospitality, and HR</span
+        >{' '}— leading modules, mentoring engineers, and championing clean, maintainable code from architecture
+        through production.
+      </p>
+    </div>
+
+    <div data-reveal style="--reveal-delay:120ms" class="grid grid-cols-2 gap-4">
+      {
+        metrics.map((m) => (
+          <div class="rounded-2xl border border-slate-200 bg-white p-6 text-center transition-all hover:-translate-y-1 hover:border-brand-500/50 hover:shadow-glow dark:border-line dark:bg-surface">
+            <p
+              class="counter text-3xl font-extrabold text-brand-600 sm:text-4xl dark:text-brand-400"
+              data-target={m.target}
+              data-prefix={m.prefix ?? ''}
+              data-suffix={m.suffix ?? ''}
+            >
+              {m.prefix ?? ''}0{m.suffix ?? ''}
+            </p>
+            <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">{m.label}</p>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<script>
+  // Count-up when the metrics scroll into view.
+  const counters = document.querySelectorAll<HTMLElement>('.counter');
+  const animate = (el: HTMLElement) => {
+    const target = Number(el.dataset.target ?? 0);
+    const prefix = el.dataset.prefix ?? '';
+    const suffix = el.dataset.suffix ?? '';
+    const duration = 1400;
+    const start = performance.now();
+    const step = (now: number) => {
+      const p = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = prefix + Math.round(target * eased).toLocaleString() + suffix;
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  };
+
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(
+      (entries, obs) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            animate(entry.target as HTMLElement);
+            obs.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.5 },
+    );
+    counters.forEach((c) => io.observe(c));
+  } else {
+    counters.forEach((c) => {
+      const el = c as HTMLElement;
+      el.textContent = (el.dataset.prefix ?? '') + el.dataset.target + (el.dataset.suffix ?? '');
+    });
+  }
+</script>

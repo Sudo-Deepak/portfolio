@@ -1,0 +1,26 @@
+{
+  "name": "deepak-kumar-portfolio",
+  "type": "module",
+  "version": "2.0.0",
+  "description": "Personal portfolio of Deepak Kumar, Senior Software Developer.",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.6.0",
+    "@iconify-json/lucide": "^1.2.118",
+    "@tailwindcss/vite": "^4.1.14",
+    "astro": "^7.1.3",
+    "astro-icon": "^1.1.5",
+    "sharp": "^0.34.4",
+    "tailwindcss": "^4.1.14"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.9",
+    "typescript": "^6.0.3"
+  }
+}

@@ -1,0 +1,127 @@
+---
+import { Icon } from 'astro-icon/components';
+import { site } from '../data/site';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const resume = `${base}/${site.resumeUrl}`;
+---
+
+<section class="relative flex min-h-screen items-center justify-center overflow-hidden px-6 pt-24 pb-16">
+  <!-- Backdrop -->
+  <div class="pointer-events-none absolute inset-0 -z-10 bg-grid"></div>
+  <div
+    class="pointer-events-none absolute -top-32 left-1/2 -z-10 h-[42rem] w-[42rem] -translate-x-1/2 rounded-full bg-brand-600/20 blur-3xl animate-pulse-slow dark:bg-brand-600/25"
+  >
+  </div>
+  <div
+    class="pointer-events-none absolute -bottom-24 right-[8%] -z-10 h-72 w-72 rounded-full bg-accent-500/15 blur-3xl"
+  >
+  </div>
+
+  <div class="mx-auto max-w-4xl text-center">
+    <p
+      data-reveal
+      class="mb-6 inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white/60 px-4 py-1.5 text-sm font-medium text-slate-600 backdrop-blur dark:border-line dark:bg-surface/60 dark:text-slate-300"
+    >
+      <span class="relative flex h-2 w-2">
+        <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-500 opacity-75"></span>
+        <span class="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
+      </span>
+      Available for backend & full-stack projects
+    </p>
+
+    <h1
+      data-reveal
+      style="--reveal-delay:80ms"
+      class="text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-6xl"
+    >
+      Hi, I'm <span class="gradient-text">Deepak Kumar</span>
+    </h1>
+
+    <p
+      data-reveal
+      style="--reveal-delay:160ms"
+      class="mx-auto mt-4 max-w-2xl text-lg font-medium text-slate-500 dark:text-slate-400"
+    >
+      {site.role} · {site.tagline}
+    </p>
+
+    <p
+      data-reveal
+      style="--reveal-delay:220ms"
+      class="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-slate-600 dark:text-slate-400"
+    >
+      I design and build <span class="font-semibold text-slate-900 dark:text-white">scalable, secure,
+      high-performance systems</span> with Java, Spring Boot, and cloud — architecting robust backends and
+      delivering <span class="font-semibold text-slate-900 dark:text-white">end-to-end, production-ready
+      solutions</span> for real-world business needs.
+    </p>
+
+    <div data-reveal style="--reveal-delay:300ms" class="mt-9 flex flex-wrap justify-center gap-3">
+      <a
+        href="#projects"
+        class="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-6 py-3 text-sm font-semibold text-white shadow-glow transition-transform hover:-translate-y-0.5 hover:bg-brand-500"
+      >
+        View My Work
+        <Icon name="lucide:arrow-down" class="h-4 w-4" />
+      </a>
+      <a
+        href={resume}
+        target="_blank"
+        rel="noopener"
+        class="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-brand-500 hover:text-brand-600 md:hidden dark:border-line dark:text-slate-200 dark:hover:text-white"
+      >
+        <Icon name="lucide:download" class="h-4 w-4" />
+        Resume
+      </a>
+      <a
+        href="#contact"
+        class="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-brand-500 hover:text-brand-600 dark:border-line dark:text-slate-200 dark:hover:text-white"
+      >
+        Let's Connect
+      </a>
+    </div>
+
+    <div data-reveal style="--reveal-delay:380ms" class="mt-10 flex items-center justify-center gap-4">
+      <a
+        href={site.socials.github}
+        target="_blank"
+        rel="noopener"
+        aria-label="GitHub"
+        class="text-slate-400 transition-colors hover:text-brand-600 dark:hover:text-white"
+      >
+        <Icon name="lucide:github" class="h-5 w-5" />
+      </a>
+      <a
+        href={site.socials.linkedin}
+        target="_blank"
+        rel="noopener"
+        aria-label="LinkedIn"
+        class="text-slate-400 transition-colors hover:text-brand-600 dark:hover:text-white"
+      >
+        <Icon name="lucide:linkedin" class="h-5 w-5" />
+      </a>
+      <a
+        href={site.socials.youtube}
+        target="_blank"
+        rel="noopener"
+        aria-label="YouTube"
+        class="text-slate-400 transition-colors hover:text-brand-600 dark:hover:text-white"
+      >
+        <Icon name="lucide:youtube" class="h-5 w-5" />
+      </a>
+      <span class="inline-flex items-center gap-1.5 text-sm text-slate-400">
+        <Icon name="lucide:map-pin" class="h-4 w-4" />
+        {site.location}
+      </span>
+    </div>
+  </div>
+
+  <a
+    href="#about"
+    aria-label="Scroll to about"
+    class="absolute bottom-8 left-1/2 -translate-x-1/2 text-slate-400 transition-colors hover:text-brand-600 dark:hover:text-white"
+  >
+    <Icon name="lucide:chevrons-down" class="h-6 w-6 animate-bounce" />
+  </a>
+</section>

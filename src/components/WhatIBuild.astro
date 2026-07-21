@@ -1,0 +1,27 @@
+---
+import { Icon } from 'astro-icon/components';
+import SectionHeading from './SectionHeading.astro';
+import { whatIBuild } from '../data/site';
+---
+
+<section id="what-i-build" class="mx-auto max-w-6xl px-6 py-24">
+  <SectionHeading eyebrow="What I Build" title="From backend architecture to shipped product" />
+
+  <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+    {
+      whatIBuild.map((item, i) => (
+        <div
+          data-reveal
+          style={`--reveal-delay:${i * 90}ms`}
+          class="group rounded-2xl border border-slate-200 bg-white p-6 transition-all hover:-translate-y-1 hover:border-brand-500/50 hover:shadow-glow dark:border-line dark:bg-surface"
+        >
+          <div class="mb-4 grid h-12 w-12 place-items-center rounded-xl bg-brand-600/10 text-brand-600 transition-colors group-hover:bg-brand-600 group-hover:text-white dark:text-brand-400">
+            <Icon name={`lucide:${item.icon}`} class="h-6 w-6" />
+          </div>
+          <h3 class="mb-2 font-semibold">{item.title}</h3>
+          <p class="text-sm leading-relaxed text-slate-600 dark:text-slate-400">{item.body}</p>
+        </div>
+      ))
+    }
+  </div>
+</section>
