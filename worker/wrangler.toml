@@ -1,0 +1,27 @@
+name = "portfolio-backend"
+main = "src/index.ts"
+compatibility_date = "2024-11-06"
+
+# Non-secret config. RESUME_FILENAME is the ONE place the generalized download
+# name lives — change it here to rename the resume everyone downloads.
+[vars]
+RESUME_FILENAME = "Deepak_Kumar_Senior_Java_Developer.pdf"
+RESUME_OBJECT_KEY = "resume.pdf"
+ALLOWED_ORIGIN = "https://sudo-deepak.github.io"
+SESSION_TTL_SECONDS = "28800"
+
+# Analytics (SQLite). Fill database_id after `wrangler d1 create portfolio_analytics`.
+[[d1_databases]]
+binding = "DB"
+database_name = "portfolio_analytics"
+database_id = "4d8979f8-192d-4b46-8ea2-82760d9b4f04"
+
+# The resume PDF is stored as a BLOB in D1 (table `assets`), so no R2 bucket is needed.
+
+# Admin login sessions. Fill id after `wrangler kv namespace create SESSIONS`.
+[[kv_namespaces]]
+binding = "SESSIONS"
+id = "4b3aeceb990d4dbe9b62e43224d09cba"
+
+# Secrets (set via `wrangler secret put`, NEVER committed):
+#   ADMIN_USERNAME, ADMIN_PASSWORD_HASH, SESSION_SECRET

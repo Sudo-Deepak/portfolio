@@ -1,0 +1,7 @@
+# Copy to `.dev.vars` (gitignored) for local `wrangler dev`. For production,
+# set the same keys with `wrangler secret put <NAME>` instead.
+#
+# Generate the password hash with:  npm run hash
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD_HASH = "pbkdf2$100000$<saltHex>$<hashHex>"
+SESSION_SECRET = "a-long-random-string-change-me"

@@ -1,9 +1,9 @@
 ---
 import { Icon } from 'astro-icon/components';
-import { site } from '../data/site';
+import { site, resumeHref } from '../data/site';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
-const resume = `${base}/${site.resumeUrl}`;
+const resume = resumeHref(base);
 ---
 
 <section class="relative flex min-h-screen items-center justify-center overflow-hidden px-6 pt-24 pb-16">

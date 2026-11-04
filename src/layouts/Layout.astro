@@ -119,5 +119,90 @@ const jsonLd = {
         reveals.forEach((el) => el.classList.add('is-visible'));
       }
     </script>
+
+    <!-- Privacy-friendly analytics beacon → Cloudflare Worker backend. -->
+    <script is:inline define:vars={{ workerUrl: site.workerUrl }}>
+      (function () {
+        try {
+          // Skip entirely until the Worker URL is configured in src/data/site.ts.
+          if (!workerUrl || workerUrl.indexOf('CHANGE-ME') !== -1) return;
+          if (navigator.doNotTrack === '1') return;
+
+          var endpoint = workerUrl.replace(/\/$/, '') + '/collect';
+
+          // Stable, anonymous visitor id for unique-visitor counts (no cookies, no PII).
+          var vid;
+          try {
+            vid = localStorage.getItem('pf_vid');
+            if (!vid) {
+              vid = (crypto.randomUUID && crypto.randomUUID()) ||
+                String(Date.now()) + Math.random().toString(16).slice(2);
+              localStorage.setItem('pf_vid', vid);
+            }
+          } catch (e) {
+            vid = null;
+          }
+
+          // Send as text/plain so the browser skips the CORS preflight.
+          function send(payload) {
+            try {
+              var body = JSON.stringify(payload);
+              if (navigator.sendBeacon) {
+                navigator.sendBeacon(endpoint, new Blob([body], { type: 'text/plain' }));
+              } else {
+                fetch(endpoint, { method: 'POST', body: body, keepalive: true, mode: 'cors' });
+              }
+            } catch (e) {
+              /* never let analytics break the page */
+            }
+          }
+
+          // 1) Pageview.
+          send({ type: 'pageview', vid: vid, path: location.pathname, ref: document.referrer });
+
+          // 2) Section engagement — one event per section, first time it's seen.
+          var seen = {};
+          var queue = [];
+          var flushTimer = null;
+
+          function flush() {
+            flushTimer = null;
+            if (!queue.length) return;
+            var batch = queue.slice();
+            queue.length = 0;
+            send({ type: 'section_view', vid: vid, path: location.pathname, sections: batch });
+          }
+          function enqueue(section) {
+            queue.push(section);
+            if (!flushTimer) flushTimer = setTimeout(flush, 2500);
+          }
+
+          var sections = document.querySelectorAll('section[id]');
+          if ('IntersectionObserver' in window && sections.length) {
+            var io2 = new IntersectionObserver(
+              function (entries, obs) {
+                entries.forEach(function (entry) {
+                  var id = entry.target.id;
+                  if (entry.isIntersecting && id && !seen[id]) {
+                    seen[id] = true;
+                    enqueue(id);
+                    obs.unobserve(entry.target);
+                  }
+                });
+              },
+              { threshold: 0.4 }
+            );
+            sections.forEach(function (el) { io2.observe(el); });
+          }
+
+          // Flush any pending section views before the page goes away.
+          document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'hidden') flush();
+          });
+        } catch (e) {
+          /* analytics is best-effort; swallow everything */
+        }
+      })();
+    </script>
   </body>
 </html>

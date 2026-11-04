@@ -14,3 +14,7 @@ pnpm-debug.log*
 .env.production
 # macOS
 .DS_Store
+# cloudflare worker (local secrets, deps, build state)
+worker/node_modules/
+worker/.dev.vars
+worker/.wrangler/

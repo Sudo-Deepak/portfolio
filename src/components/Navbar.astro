@@ -1,9 +1,9 @@
 ---
 import { Icon } from 'astro-icon/components';
-import { site, nav } from '../data/site';
+import { site, nav, resumeHref } from '../data/site';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
-const resume = `${base}/${site.resumeUrl}`;
+const resume = resumeHref(base);
 ---
 
 <header

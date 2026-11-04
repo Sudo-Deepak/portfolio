@@ -6,8 +6,16 @@ export const site = {
   tagline: 'Java · Spring Boot · Microservices · Cloud',
   location: 'Pune, Maharashtra, India',
   email: 'deepakprajapati.officials@gmail.com',
-  // Resume hosted in /public so it is versioned with the site.
+  // Resume fallback in /public — used for local dev and as the seed uploaded to R2.
+  // In production the live resume is served by the Worker ("/resume"), so it can be
+  // re-uploaded from the admin panel without a redeploy.
   resumeUrl: 'resume.pdf',
+  // Cloudflare Worker backend (analytics + secure admin + resume storage).
+  // After you deploy the Worker, replace this with its real URL, e.g.
+  // 'https://portfolio-backend.<your-subdomain>.workers.dev' (no trailing slash).
+  // While it still contains "CHANGE-ME" the site keeps working: the resume link
+  // falls back to /public and analytics beacons are skipped.
+  workerUrl: 'https://portfolio-backend.sudo-deepak.workers.dev',
   url: 'https://sudo-deepak.github.io/portfolio',
   description:
     'Senior Software Developer with 4+ years of experience designing scalable, secure, high-performance enterprise systems with Java, Spring Boot, microservices, and cloud.',
@@ -19,6 +27,16 @@ export const site = {
     instagram: 'https://www.instagram.com/java.revisit',
   },
 };
+
+// Resolve the resume link. In production (and once the Worker URL is configured)
+// it points at the Worker's /resume endpoint, which always serves the latest
+// uploaded PDF. During `astro dev`, or before the Worker is set up, it falls back
+// to the versioned copy in /public so the link always works.
+export function resumeHref(base: string): string {
+  const configured = site.workerUrl && !site.workerUrl.includes('CHANGE-ME');
+  if (!import.meta.env.DEV && configured) return `${site.workerUrl}/resume`;
+  return `${base}/${site.resumeUrl}`;
+}
 
 export const nav = [
   { label: 'About', href: '#about' },
