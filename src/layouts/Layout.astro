@@ -120,6 +120,39 @@ const jsonLd = {
       }
     </script>
 
+    <!--
+      Resume links default to the static /public copy so the download always works
+      even if the Worker is down or removed. When the Worker is reachable, upgrade
+      the links to its /resume endpoint (latest admin-uploaded PDF). We probe
+      /health, never /resume, because /resume logs a download event.
+    -->
+    <script is:inline define:vars={{ workerUrl: site.workerUrl }}>
+      (function () {
+        try {
+          if (!workerUrl || workerUrl.indexOf('CHANGE-ME') !== -1) return;
+          var links = document.querySelectorAll('a[data-resume]');
+          if (!links.length) return;
+
+          var base = workerUrl.replace(/\/$/, '');
+          var ctrl = new AbortController();
+          var timer = setTimeout(function () { ctrl.abort(); }, 1500);
+
+          fetch(base + '/health', { method: 'GET', mode: 'cors', signal: ctrl.signal })
+            .then(function (res) {
+              clearTimeout(timer);
+              if (!res || !res.ok) return;
+              links.forEach(function (a) { a.setAttribute('href', base + '/resume'); });
+            })
+            .catch(function () {
+              clearTimeout(timer);
+              /* Worker unreachable — keep the static /public link. */
+            });
+        } catch (e) {
+          /* never let this break the page */
+        }
+      })();
+    </script>
+
     <!-- Privacy-friendly analytics beacon → Cloudflare Worker backend. -->
     <script is:inline define:vars={{ workerUrl: site.workerUrl }}>
       (function () {

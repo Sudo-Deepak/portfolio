@@ -2,6 +2,11 @@ name = "portfolio-backend"
 main = "src/index.ts"
 compatibility_date = "2024-11-06"
 
+# Nightly maintenance: roll up daily totals + prune raw events older than 180 days
+# (see the `scheduled` handler in src/index.ts). Keeps D1 usage inside the free tier.
+[triggers]
+crons = ["0 3 * * *"]  # 03:00 UTC daily
+
 # Non-secret config. RESUME_FILENAME is the ONE place the generalized download
 # name lives — change it here to rename the resume everyone downloads.
 [vars]

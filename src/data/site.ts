@@ -28,13 +28,12 @@ export const site = {
   },
 };
 
-// Resolve the resume link. In production (and once the Worker URL is configured)
-// it points at the Worker's /resume endpoint, which always serves the latest
-// uploaded PDF. During `astro dev`, or before the Worker is set up, it falls back
-// to the versioned copy in /public so the link always works.
+// Resolve the resume link. This ALWAYS returns the static copy in /public so the
+// download works even if the Worker is down or removed (and with JS disabled).
+// When the Worker is reachable, a small runtime script in Layout.astro upgrades
+// these links to the Worker's /resume endpoint (the latest admin-uploaded PDF).
+// That keeps the portfolio fully functional independent of the backend.
 export function resumeHref(base: string): string {
-  const configured = site.workerUrl && !site.workerUrl.includes('CHANGE-ME');
-  if (!import.meta.env.DEV && configured) return `${site.workerUrl}/resume`;
   return `${base}/${site.resumeUrl}`;
 }
 
