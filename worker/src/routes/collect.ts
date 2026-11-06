@@ -2,6 +2,7 @@ import type { Env } from '../types';
 import { corsHeaders } from '../lib/cors';
 import { isBot, parseDevice, parseBrowser, parseOS } from '../lib/ua';
 import { insertStmt, type EventRow } from '../lib/db';
+import { parseTags, classifyChannel } from '../lib/source';
 
 const ALLOWED_TYPES = new Set(['pageview', 'section_view', 'resume_download']);
 const MAX_BODY = 4096;
@@ -39,14 +40,25 @@ export async function handleCollect(request: Request, env: Env, ctx: ExecutionCo
   if (!ALLOWED_TYPES.has(type)) return drop();
 
   const ts = Date.now();
-  const country = ((request.cf?.country as string) || 'XX').slice(0, 4);
+  const cf = request.cf || {};
+  const country = ((cf.country as string) || 'XX').slice(0, 4);
+  const city = ((cf.city as string) || '').slice(0, 80) || null;
+  const region = ((cf.region as string) || '').slice(0, 80) || null;
   const device = parseDevice(ua);
   const browser = parseBrowser(ua);
   const os = parseOS(ua);
   const vid = typeof body.vid === 'string' ? body.vid.slice(0, 64) : null;
   const path = typeof body.path === 'string' ? body.path.slice(0, 256) : null;
+  // Source/audience tags from the landing-page query string (e.g. ?ref=linkedin&aud=recruiter).
+  const tags = parseTags(body.qs);
 
-  const mk = (event_type: string, section: string | null, referrer: string | null): EventRow => ({
+  const mk = (
+    event_type: string,
+    section: string | null,
+    referrer: string | null,
+    channel: string | null,
+    audience: string | null,
+  ): EventRow => ({
     ts,
     event_type,
     visitor_id: vid,
@@ -57,6 +69,10 @@ export async function handleCollect(request: Request, env: Env, ctx: ExecutionCo
     device,
     browser,
     os,
+    channel,
+    audience,
+    city,
+    region,
   });
 
   const stmts: D1PreparedStatement[] = [];
@@ -68,11 +84,13 @@ export async function handleCollect(request: Request, env: Env, ctx: ExecutionCo
         ? [body.section]
         : [];
     for (const s of list.slice(0, 20)) {
-      if (typeof s === 'string' && s) stmts.push(insertStmt(env, mk('section_view', s.slice(0, 64), null)));
+      if (typeof s === 'string' && s)
+        stmts.push(insertStmt(env, mk('section_view', s.slice(0, 64), null, null, tags.audience)));
     }
   } else {
     const referrer = type === 'pageview' ? normalizeReferrer(body.ref) : null;
-    stmts.push(insertStmt(env, mk(type, null, referrer)));
+    const channel = type === 'pageview' ? classifyChannel(tags.source, referrer) : null;
+    stmts.push(insertStmt(env, mk(type, null, referrer, channel, tags.audience)));
   }
 
   if (stmts.length) {

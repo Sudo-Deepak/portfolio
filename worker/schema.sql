@@ -11,7 +11,11 @@ CREATE TABLE IF NOT EXISTS events (
   country     TEXT,                         -- request.cf.country
   device      TEXT,                         -- 'mobile' | 'tablet' | 'desktop'
   browser     TEXT,                         -- 'Chrome' | 'Safari' | ...
-  os          TEXT
+  os          TEXT,
+  channel     TEXT,                         -- friendly traffic source: ?ref tag, else referrer bucket
+  audience    TEXT,                         -- ?aud / utm_campaign tag (e.g. 'recruiter')
+  city        TEXT,                         -- request.cf.city
+  region      TEXT                          -- request.cf.region (state / province)
 );
 
 CREATE INDEX IF NOT EXISTS idx_events_ts       ON events(ts);

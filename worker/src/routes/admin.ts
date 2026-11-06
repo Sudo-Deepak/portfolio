@@ -8,6 +8,7 @@ import {
   clearSessionCookie,
 } from '../lib/auth';
 import { loginPage, dashboardPage } from '../ui/admin-ui';
+import { getResumeFilename, setResumeFilename } from '../lib/settings';
 
 function redirect(location: string, cookie?: string): Response {
   const headers = new Headers({ Location: location });
@@ -55,7 +56,7 @@ async function getStats(env: Env, range: number) {
        SUM(event_type='resume_download') AS downloads
      FROM events`;
 
-  const [totals, cur, prev, daily, topPages, referrers, countries, devices, browsers, os, sections, heat] =
+  const [totals, cur, prev, daily, topPages, channels, audiences, referrers, countries, cities, regions, devices, browsers, os, sections, heat] =
     await env.DB.batch([
       // All-time headline totals.
       env.DB.prepare(WINDOW_TOTALS),
@@ -80,6 +81,18 @@ async function getStats(env: Env, range: number) {
          FROM events WHERE event_type='pageview' AND ts >= ?
          GROUP BY path ORDER BY views DESC LIMIT 10`,
       ).bind(since),
+      // Traffic sources: friendly channel (explicit ?ref tag, else referrer bucket).
+      env.DB.prepare(
+        `SELECT COALESCE(NULLIF(channel,''),'Direct') AS channel, COUNT(*) AS n
+         FROM events WHERE event_type='pageview' AND ts >= ?
+         GROUP BY channel ORDER BY n DESC LIMIT 12`,
+      ).bind(since),
+      // Audience tags (?aud / utm_campaign), only where you tagged the link.
+      env.DB.prepare(
+        `SELECT audience, COUNT(*) AS n
+         FROM events WHERE event_type='pageview' AND audience IS NOT NULL AND audience <> '' AND ts >= ?
+         GROUP BY audience ORDER BY n DESC LIMIT 12`,
+      ).bind(since),
       env.DB.prepare(
         `SELECT COALESCE(NULLIF(referrer,''),'(direct)') AS ref, COUNT(*) AS n
          FROM events WHERE event_type='pageview' AND ts >= ?
@@ -89,6 +102,17 @@ async function getStats(env: Env, range: number) {
         `SELECT COALESCE(NULLIF(country,''),'??') AS country, COUNT(*) AS n
          FROM events WHERE event_type='pageview' AND ts >= ?
          GROUP BY country ORDER BY n DESC LIMIT 15`,
+      ).bind(since),
+      // City / region (state) — from request.cf, only where Cloudflare resolves them.
+      env.DB.prepare(
+        `SELECT city, COUNT(*) AS n
+         FROM events WHERE event_type='pageview' AND city IS NOT NULL AND city <> '' AND ts >= ?
+         GROUP BY city ORDER BY n DESC LIMIT 15`,
+      ).bind(since),
+      env.DB.prepare(
+        `SELECT region, COUNT(*) AS n
+         FROM events WHERE event_type='pageview' AND region IS NOT NULL AND region <> '' AND ts >= ?
+         GROUP BY region ORDER BY n DESC LIMIT 15`,
       ).bind(since),
       env.DB.prepare(
         `SELECT COALESCE(NULLIF(device,''),'unknown') AS device, COUNT(*) AS n
@@ -127,8 +151,12 @@ async function getStats(env: Env, range: number) {
     },
     daily: daily.results,
     topPages: topPages.results,
+    channels: channels.results,
+    audiences: audiences.results,
     referrers: referrers.results,
     countries: countries.results,
+    cities: cities.results,
+    regions: regions.results,
     devices: devices.results,
     browsers: browsers.results,
     os: os.results,
@@ -200,7 +228,7 @@ export async function handleAdmin(
       const hasError = new URL(request.url).searchParams.has('error');
       return html(loginPage(hasError));
     }
-    return html(dashboardPage(env.RESUME_FILENAME || 'resume.pdf'));
+    return html(dashboardPage(await getResumeFilename(env)));
   }
 
   // --- Protected API ---
@@ -210,6 +238,18 @@ export async function handleAdmin(
     if (path === '/admin/api/stats' && method === 'GET')
       return json(await getStats(env, parseRange(request)));
     if (path === '/admin/api/resume' && method === 'POST') return uploadResume(request, env);
+
+    if (path === '/admin/api/resume-name' && method === 'POST') {
+      let raw: unknown = '';
+      try {
+        raw = ((await request.json()) as any)?.filename;
+      } catch {
+        /* ignore */
+      }
+      const name = await setResumeFilename(env, raw);
+      if (!name) return json({ error: 'invalid_filename' }, 400);
+      return json({ ok: true, filename: name });
+    }
 
     if (path === '/admin/api/reset' && method === 'POST') {
       let confirm = '';

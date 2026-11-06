@@ -1,6 +1,7 @@
 import type { Env } from '../types';
 import { corsHeaders } from '../lib/cors';
 import { insertStmt } from '../lib/db';
+import { getResumeFilename } from '../lib/settings';
 import { isBot, parseDevice, parseBrowser, parseOS } from '../lib/ua';
 
 // D1 returns BLOB columns as ArrayBuffer (or, in some versions, number[]).
@@ -32,7 +33,8 @@ export async function handleResume(request: Request, env: Env, _ctx: ExecutionCo
   // Server-side (canonical) download count, best-effort, bots excluded.
   const ua = request.headers.get('User-Agent') || '';
   if (!isBot(ua)) {
-    const country = ((request.cf?.country as string) || 'XX').slice(0, 4);
+    const cf = request.cf || {};
+    const country = ((cf.country as string) || 'XX').slice(0, 4);
     try {
       await insertStmt(env, {
         ts: Date.now(),
@@ -45,13 +47,17 @@ export async function handleResume(request: Request, env: Env, _ctx: ExecutionCo
         device: parseDevice(ua),
         browser: parseBrowser(ua),
         os: parseOS(ua),
+        channel: 'Resume',
+        audience: null,
+        city: ((cf.city as string) || '').slice(0, 80) || null,
+        region: ((cf.region as string) || '').slice(0, 80) || null,
       }).run();
     } catch {
       // best-effort — don't block the download on a logging failure
     }
   }
 
-  const filename = env.RESUME_FILENAME || 'resume.pdf';
+  const filename = await getResumeFilename(env);
   const headers = new Headers(cors);
   headers.set('Content-Type', 'application/pdf');
   headers.set('Content-Disposition', `inline; filename="${filename}"`);

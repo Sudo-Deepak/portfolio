@@ -11,12 +11,16 @@ export interface EventRow {
   device: string | null;
   browser: string | null;
   os: string | null;
+  channel: string | null;
+  audience: string | null;
+  city: string | null;
+  region: string | null;
 }
 
 export function insertStmt(env: Env, e: EventRow): D1PreparedStatement {
   return env.DB.prepare(
-    `INSERT INTO events (ts, event_type, visitor_id, path, section, referrer, country, device, browser, os)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO events (ts, event_type, visitor_id, path, section, referrer, country, device, browser, os, channel, audience, city, region)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).bind(
     e.ts,
     e.event_type,
@@ -28,5 +32,9 @@ export function insertStmt(env: Env, e: EventRow): D1PreparedStatement {
     e.device,
     e.browser,
     e.os,
+    e.channel,
+    e.audience,
+    e.city,
+    e.region,
   );
 }

@@ -148,10 +148,14 @@ const DASHBOARD_JS = `
     setHtml('cv-spark', sparkline(col(d.daily,'downloads')));
     setHtml('trend', trendChart(d.daily));
     setHtml('heatmap', heatmapChart(d.heatmap));
+    setHtml('channels', bars(d.channels,'channel','n'));
+    setHtml('audiences', bars(d.audiences,'audience','n'));
     setHtml('pages', bars(d.topPages,'path','views'));
     setHtml('sections', bars(d.sections,'section','views'));
-    setHtml('referrers', bars(d.referrers,'ref','n'));
     setHtml('countries', bars(d.countries,'country','n'));
+    setHtml('cities', bars(d.cities,'city','n'));
+    setHtml('regions', bars(d.regions,'region','n'));
+    setHtml('referrers', bars(d.referrers,'ref','n'));
     setHtml('devices', bars(d.devices,'device','n'));
     setHtml('browsers', bars(d.browsers,'browser','n'));
     setHtml('os', bars(d.os,'os','n'));
@@ -185,6 +189,18 @@ const DASHBOARD_JS = `
         if(o.ok){ msg.className='msg ok'; msg.textContent='Uploaded ('+Math.round(o.j.size/1024)+' KB). Live within ~5 min.'; e.target.reset(); }
         else { msg.className='msg err'; msg.textContent='Failed: '+(o.j.error||'error'); }
       }).catch(function(){ msg.className='msg err'; msg.textContent='Upload failed.'; });
+  });
+
+  document.getElementById('name-btn').addEventListener('click', function(){
+    var msg = document.getElementById('name-msg');
+    var input = document.getElementById('resume-name');
+    msg.className='msg'; msg.textContent='Saving...';
+    fetch('/admin/api/resume-name', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin', body: JSON.stringify({ filename: input.value }) })
+      .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
+      .then(function(o){
+        if(o.ok){ msg.className='msg ok'; msg.textContent='Saved.'; input.value=o.j.filename; var sh=document.getElementById('name-shown'); if(sh) sh.textContent=o.j.filename; }
+        else { msg.className='msg err'; msg.textContent='Failed: '+(o.j.error||'error'); }
+      }).catch(function(){ msg.className='msg err'; msg.textContent='Save failed.'; });
   });
 
   document.getElementById('reset-btn').addEventListener('click', function(){
@@ -269,6 +285,7 @@ export function dashboardPage(filename: string): string {
 
   .row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
   input[type=file] { color:#cbd5e1; font-size:14px; }
+  input[type=text] { padding:8px 10px; border-radius:8px; border:1px solid #334155; background:#0b1120; color:#e2e8f0; font-size:14px; min-width:260px; flex:1 1 260px; }
   .msg { font-size:13px; }
   .msg.ok { color:#34d399; } .msg.err { color:#f87171; }
   .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
@@ -327,13 +344,31 @@ export function dashboardPage(filename: string): string {
   </section>
 
   <div class="grid2">
+    <section class="panel">
+      <h2>Traffic sources</h2>
+      <p class="muted" style="margin:-4px 0 10px">Tag the links you share, e.g. <code>?ref=linkedin</code> · <code>?ref=resume</code>. Untagged visits fall back to the referrer.</p>
+      <div id="channels"></div>
+    </section>
+    <section class="panel">
+      <h2>Audience</h2>
+      <p class="muted" style="margin:-4px 0 10px">From <code>?aud=</code> tags you add, e.g. <code>?ref=linkedin&amp;aud=recruiter</code> · <code>?aud=hr</code>.</p>
+      <div id="audiences"></div>
+    </section>
+  </div>
+
+  <div class="grid2">
     <section class="panel"><h2>Top pages</h2><div id="pages"></div></section>
     <section class="panel"><h2>Section engagement</h2><div id="sections"></div></section>
   </div>
 
   <div class="grid2">
-    <section class="panel"><h2>Top referrers</h2><div id="referrers"></div></section>
     <section class="panel"><h2>Countries</h2><div id="countries"></div></section>
+    <section class="panel"><h2>Cities</h2><div id="cities"></div></section>
+  </div>
+
+  <div class="grid2">
+    <section class="panel"><h2>States / regions</h2><div id="regions"></div></section>
+    <section class="panel"><h2>Referrer hosts</h2><div id="referrers"></div></section>
   </div>
 
   <div class="grid3">
@@ -349,7 +384,12 @@ export function dashboardPage(filename: string): string {
       <button class="btn" type="submit">Upload new resume</button>
       <span class="msg" id="resume-msg"></span>
     </form>
-    <p class="muted" style="margin:10px 0 0">Served as <strong>${filename}</strong> at <code>/resume</code>. Uploads replace it immediately (allow ~5&nbsp;min cache / hard refresh).</p>
+    <div class="row" style="margin-top:12px">
+      <input id="resume-name" type="text" value="${filename}" aria-label="Download filename" spellcheck="false" />
+      <button class="btn secondary" id="name-btn" type="button">Save download name</button>
+      <span class="msg" id="name-msg"></span>
+    </div>
+    <p class="muted" style="margin:10px 0 0">Served as <strong id="name-shown">${filename}</strong> at <code>/resume</code>. Changing the name takes effect immediately; the file itself updates within ~5&nbsp;min (cache / hard refresh). <code>.pdf</code> is added automatically.</p>
   </section>
 
   <section class="panel">

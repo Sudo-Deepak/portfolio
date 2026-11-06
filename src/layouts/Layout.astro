@@ -123,8 +123,13 @@ const jsonLd = {
     <!--
       Resume links default to the static /public copy so the download always works
       even if the Worker is down or removed. When the Worker is reachable, upgrade
-      the links to its /resume endpoint (latest admin-uploaded PDF). We probe
-      /health, never /resume, because /resume logs a download event.
+      the links to its /resume endpoint (latest admin-uploaded PDF).
+
+      The reachability probe fires ONLY when a visitor shows intent to use the
+      resume (hover / focus / tap), at most once per page — so the Worker is not
+      pinged on every page view and we stay comfortably inside the free tier.
+      Most visitors never trigger it. We probe /health, never /resume, because
+      /resume logs a download event.
     -->
     <script is:inline define:vars={{ workerUrl: site.workerUrl }}>
       (function () {
@@ -134,19 +139,31 @@ const jsonLd = {
           if (!links.length) return;
 
           var base = workerUrl.replace(/\/$/, '');
-          var ctrl = new AbortController();
-          var timer = setTimeout(function () { ctrl.abort(); }, 1500);
+          var probed = false;
 
-          fetch(base + '/health', { method: 'GET', mode: 'cors', signal: ctrl.signal })
-            .then(function (res) {
-              clearTimeout(timer);
-              if (!res || !res.ok) return;
-              links.forEach(function (a) { a.setAttribute('href', base + '/resume'); });
-            })
-            .catch(function () {
-              clearTimeout(timer);
-              /* Worker unreachable — keep the static /public link. */
-            });
+          function upgrade() {
+            if (probed) return;
+            probed = true; // exactly one Worker request per page, and only on intent
+            var ctrl = new AbortController();
+            var timer = setTimeout(function () { ctrl.abort(); }, 1500);
+            fetch(base + '/health', { method: 'GET', mode: 'cors', signal: ctrl.signal })
+              .then(function (res) {
+                clearTimeout(timer);
+                if (res && res.ok) {
+                  links.forEach(function (a) { a.setAttribute('href', base + '/resume'); });
+                }
+              })
+              .catch(function () {
+                clearTimeout(timer);
+                /* Worker unreachable — keep the static /public link. */
+              });
+          }
+
+          links.forEach(function (a) {
+            a.addEventListener('pointerenter', upgrade, { once: true });
+            a.addEventListener('focus', upgrade, { once: true });
+            a.addEventListener('touchstart', upgrade, { once: true, passive: true });
+          });
         } catch (e) {
           /* never let this break the page */
         }
@@ -190,8 +207,8 @@ const jsonLd = {
             }
           }
 
-          // 1) Pageview.
-          send({ type: 'pageview', vid: vid, path: location.pathname, ref: document.referrer });
+          // 1) Pageview. `qs` carries any ?ref=/?aud= link tags for source attribution.
+          send({ type: 'pageview', vid: vid, path: location.pathname, ref: document.referrer, qs: location.search });
 
           // 2) Section engagement — one event per section, first time it's seen.
           var seen = {};
