@@ -48,6 +48,12 @@ const DASHBOARD_JS = `
     });
   }
   function num(n){ n=+n||0; return n.toLocaleString(); }
+  function fmtDur(sec){
+    sec=+sec||0;
+    if(sec<60) return sec+'s';
+    var m=Math.floor(sec/60), s=sec%60;
+    return m+'m '+(s<10?'0':'')+s+'s';
+  }
   function setText(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; }
   function setHtml(id,v){ var el=document.getElementById(id); if(el) el.innerHTML=v; }
   function col(rows,key){ var a=[],i; rows=rows||[]; for(i=0;i<rows.length;i++) a.push(+rows[i][key]||0); return a; }
@@ -146,8 +152,26 @@ const DASHBOARD_JS = `
     var pc = prev.uniques? prev.downloads/prev.uniques*100 : 0;
     setText('cv', cc.toFixed(1)); setHtml('cv-delta', deltaHtml(cc,pc));
     setHtml('cv-spark', sparkline(col(d.daily,'downloads')));
+    // Engagement: sessions, bounce rate, avg session duration, new vs returning.
+    var se = d.sessions||{count:0,bounced:0,avgDuration:0};
+    var vi = d.visitors||{new:0,returning:0};
+    var bounce = se.count ? Math.round(se.bounced/se.count*100) : 0;
+    setText('eg-sessions', num(se.count));
+    setText('eg-bounce', bounce+'%');
+    setText('eg-dur', fmtDur(se.avgDuration));
+    setText('eg-new', num(vi.new));
+    setText('eg-ret', num(vi.returning));
+
     setHtml('trend', trendChart(d.daily));
     setHtml('heatmap', heatmapChart(d.heatmap));
+    setHtml('interactions', bars(d.interactions,'label','n'));
+    setHtml('scroll', bars(d.scroll,'label','n'));
+
+    // Leads unread badge (list is loaded lazily on first open).
+    var lead = d.leads||{total:0,unread:0};
+    var badge = document.getElementById('leads-badge');
+    if(badge){ if(lead.unread>0){ badge.textContent=lead.unread+' new'; badge.style.display=''; } else { badge.style.display='none'; } }
+    setText('leads-total', num(lead.total));
     setHtml('channels', bars(d.channels,'channel','n'));
     setHtml('audiences', bars(d.audiences,'audience','n'));
     setHtml('pages', bars(d.topPages,'path','views'));
@@ -166,6 +190,34 @@ const DASHBOARD_JS = `
       if(res.status===401){ location.href='/admin'; return null; }
       return res.json();
     }).then(function(d){ if(d) render(d); }).catch(function(){});
+  }
+
+  function renderLeads(d){
+    var rows = (d && d.leads) || [];
+    var seen = (d && d.seenTs) || 0;
+    if(!rows.length){ setHtml('leads-list', '<p class="muted">No leads yet.</p>'); return; }
+    var h='', i;
+    for(i=0;i<rows.length;i++){
+      var r=rows[i];
+      var isNew = (+r.ts) > seen;
+      var loc=[r.city,r.region,r.country].filter(Boolean).join(', ');
+      var when=new Date(+r.ts).toLocaleString();
+      h += '<div class="lead'+(isNew?' lead-new':'')+'">'
+        +'<div class="lead-top"><span class="lead-name">'+esc(r.name)+(isNew?' <span class="lead-dot">new</span>':'')+'</span>'
+        +'<span class="lead-when">'+esc(when)+'</span></div>'
+        +'<div class="lead-meta"><a href="mailto:'+esc(r.email)+'">'+esc(r.email)+'</a>'
+        +' · '+esc(r.channel||'Direct')+(loc?(' · '+esc(loc)):'')
+        +(r.emailed?'':' · <span class="lead-noemail">email not sent</span>')+'</div>'
+        +'<div class="lead-msg">'+esc(r.message)+'</div></div>';
+    }
+    setHtml('leads-list', h);
+  }
+
+  function loadLeads(){
+    fetch('/admin/api/leads', { credentials:'same-origin' }).then(function(res){
+      if(res.status===401){ location.href='/admin'; return null; }
+      return res.json();
+    }).then(function(d){ if(d) renderLeads(d); }).catch(function(){});
   }
 
   var rangeBox = document.getElementById('ranges');
@@ -203,6 +255,20 @@ const DASHBOARD_JS = `
       }).catch(function(){ msg.className='msg err'; msg.textContent='Save failed.'; });
   });
 
+  var leadsSeenBtn = document.getElementById('leads-seen-btn');
+  if(leadsSeenBtn) leadsSeenBtn.addEventListener('click', function(){
+    fetch('/admin/api/leads/seen', { method:'POST', credentials:'same-origin' })
+      .then(function(){ load(); loadLeads(); }).catch(function(){});
+  });
+
+  var exportBox = document.getElementById('exports');
+  if(exportBox) exportBox.addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('button[data-export]') : null;
+    if(!b) return;
+    var type = b.getAttribute('data-export');
+    window.location.href = '/admin/api/export?type='+type+'&range='+state.range;
+  });
+
   document.getElementById('reset-btn').addEventListener('click', function(){
     if(!confirm('Delete ALL analytics data? This cannot be undone.')) return;
     var msg = document.getElementById('reset-msg');
@@ -214,6 +280,7 @@ const DASHBOARD_JS = `
   });
 
   load();
+  loadLeads();
 })();
 `;
 
@@ -292,6 +359,27 @@ export function dashboardPage(filename: string): string {
   .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; }
   @media (max-width:720px){ .grid2, .grid3 { grid-template-columns:1fr; } }
   code { background:#1e293b; padding:1px 6px; border-radius:4px; }
+
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:16px; }
+  .stat .l { color:#94a3b8; font-size:12px; }
+  .stat .v { font-size:22px; font-weight:700; margin-top:2px; font-variant-numeric:tabular-nums; }
+
+  .panel-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 12px; }
+  .panel-head h2 { margin:0; }
+  .badge { background:#b91c1c; color:#fff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; }
+
+  .lead { border-top:1px solid #1e293b; padding:12px 0; }
+  .lead:first-of-type { border-top:0; }
+  .lead-new { background:rgba(37,99,235,0.06); margin:0 -8px; padding:12px 8px; border-radius:8px; border-top:0; }
+  .lead-top { display:flex; justify-content:space-between; gap:8px; align-items:baseline; }
+  .lead-name { font-weight:600; color:#e2e8f0; }
+  .lead-dot { background:#2563eb; color:#fff; font-size:10px; font-weight:700; padding:1px 6px; border-radius:999px; margin-left:6px; vertical-align:middle; }
+  .lead-when { color:#64748b; font-size:12px; white-space:nowrap; }
+  .lead-meta { font-size:12px; color:#94a3b8; margin:3px 0 6px; }
+  .lead-meta a { color:#38bdf8; text-decoration:none; }
+  .lead-noemail { color:#f59e0b; }
+  .lead-msg { font-size:13px; color:#cbd5e1; white-space:pre-wrap; }
+  .leads-list { max-height:520px; overflow:auto; }
 </style>
 </head>
 <body>
@@ -334,6 +422,18 @@ export function dashboardPage(filename: string): string {
   </div>
 
   <section class="panel">
+    <h2>Engagement</h2>
+    <div class="stats">
+      <div class="stat"><div class="l">Sessions</div><div class="v" id="eg-sessions">-</div></div>
+      <div class="stat"><div class="l">Bounce rate</div><div class="v" id="eg-bounce">-</div></div>
+      <div class="stat"><div class="l">Avg. session</div><div class="v" id="eg-dur">-</div></div>
+      <div class="stat"><div class="l">New visitors</div><div class="v" id="eg-new">-</div></div>
+      <div class="stat"><div class="l">Returning</div><div class="v" id="eg-ret">-</div></div>
+    </div>
+    <p class="muted" style="margin:10px 0 0">Sessions group a visitor's pageviews within a 30-min window. A bounce is a single-pageview session.</p>
+  </section>
+
+  <section class="panel">
     <h2>Traffic trend</h2>
     <div id="trend"></div>
   </section>
@@ -342,6 +442,20 @@ export function dashboardPage(filename: string): string {
     <h2>When visitors come (hour × day)</h2>
     <div id="heatmap"></div>
   </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Leads <span class="badge" id="leads-badge" style="display:none"></span></h2>
+      <button class="btn secondary" id="leads-seen-btn" type="button">Mark all read</button>
+    </div>
+    <p class="muted" style="margin:-4px 0 10px">Every contact-form submission is stored here — <b id="leads-total">-</b> total. You're notified by email too, but this list never misses one.</p>
+    <div class="leads-list" id="leads-list"><p class="muted">Loading…</p></div>
+  </section>
+
+  <div class="grid2">
+    <section class="panel"><h2>Top interactions (CTA clicks)</h2><div id="interactions"></div></section>
+    <section class="panel"><h2>Scroll depth</h2><div id="scroll"></div></section>
+  </div>
 
   <div class="grid2">
     <section class="panel">
@@ -390,6 +504,15 @@ export function dashboardPage(filename: string): string {
       <span class="msg" id="name-msg"></span>
     </div>
     <p class="muted" style="margin:10px 0 0">Served as <strong id="name-shown">${filename}</strong> at <code>/resume</code>. Changing the name takes effect immediately; the file itself updates within ~5&nbsp;min (cache / hard refresh). <code>.pdf</code> is added automatically.</p>
+  </section>
+
+  <section class="panel">
+    <h2>Export data (CSV)</h2>
+    <div class="row" id="exports">
+      <button class="btn secondary" type="button" data-export="leads">Leads</button>
+      <button class="btn secondary" type="button" data-export="events">Events (current range)</button>
+      <button class="btn secondary" type="button" data-export="daily">Daily totals (current range)</button>
+    </div>
   </section>
 
   <section class="panel">

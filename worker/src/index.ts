@@ -1,6 +1,7 @@
 import type { Env } from './types';
 import { preflight, corsHeaders } from './lib/cors';
 import { handleCollect } from './routes/collect';
+import { handleContact } from './routes/contact';
 import { handleResume } from './routes/resume';
 import { handleAdmin } from './routes/admin';
 
@@ -13,13 +14,14 @@ export default {
     if (method === 'OPTIONS') return preflight(env, request);
 
     if (path === '/collect' && method === 'POST') return handleCollect(request, env, ctx);
+    if (path === '/contact' && method === 'POST') return handleContact(request, env, ctx);
     if (path === '/resume' && method === 'GET') return handleResume(request, env, ctx);
     if (path === '/admin' || path.startsWith('/admin/')) return handleAdmin(request, env, ctx, path);
 
     if (path === '/' || path === '/health') {
       // CORS so the public site can probe reachability before upgrading the
       // resume link to this Worker's /resume endpoint.
-      return new Response('portfolio-backend ok', {
+      return new Response('portfolio ok', {
         headers: { 'Content-Type': 'text/plain', ...corsHeaders(env, request) },
       });
     }

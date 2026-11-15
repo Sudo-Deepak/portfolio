@@ -4,7 +4,14 @@ import { isBot, parseDevice, parseBrowser, parseOS } from '../lib/ua';
 import { insertStmt, type EventRow } from '../lib/db';
 import { parseTags, classifyChannel } from '../lib/source';
 
-const ALLOWED_TYPES = new Set(['pageview', 'section_view', 'resume_download']);
+const ALLOWED_TYPES = new Set([
+  'pageview',
+  'section_view',
+  'resume_download',
+  'cta_click',
+  'scroll_depth',
+  'contact_submit',
+]);
 const MAX_BODY = 4096;
 
 function normalizeReferrer(ref: unknown): string | null {
@@ -48,13 +55,16 @@ export async function handleCollect(request: Request, env: Env, ctx: ExecutionCo
   const browser = parseBrowser(ua);
   const os = parseOS(ua);
   const vid = typeof body.vid === 'string' ? body.vid.slice(0, 64) : null;
+  const sid = typeof body.sid === 'string' ? body.sid.slice(0, 64) : null;
   const path = typeof body.path === 'string' ? body.path.slice(0, 256) : null;
+  const label = typeof body.label === 'string' ? body.label.slice(0, 64) : null;
   // Source/audience tags from the landing-page query string (e.g. ?ref=linkedin&aud=recruiter).
   const tags = parseTags(body.qs);
 
   const mk = (
     event_type: string,
     section: string | null,
+    label: string | null,
     referrer: string | null,
     channel: string | null,
     audience: string | null,
@@ -62,8 +72,10 @@ export async function handleCollect(request: Request, env: Env, ctx: ExecutionCo
     ts,
     event_type,
     visitor_id: vid,
+    session_id: sid,
     path,
     section,
+    label,
     referrer,
     country,
     device,
@@ -85,12 +97,13 @@ export async function handleCollect(request: Request, env: Env, ctx: ExecutionCo
         : [];
     for (const s of list.slice(0, 20)) {
       if (typeof s === 'string' && s)
-        stmts.push(insertStmt(env, mk('section_view', s.slice(0, 64), null, null, tags.audience)));
+        stmts.push(insertStmt(env, mk('section_view', s.slice(0, 64), null, null, null, tags.audience)));
     }
   } else {
     const referrer = type === 'pageview' ? normalizeReferrer(body.ref) : null;
     const channel = type === 'pageview' ? classifyChannel(tags.source, referrer) : null;
-    stmts.push(insertStmt(env, mk(type, null, referrer, channel, tags.audience)));
+    // cta_click / scroll_depth carry a `label`; pageview/resume_download don't.
+    stmts.push(insertStmt(env, mk(type, null, label, referrer, channel, tags.audience)));
   }
 
   if (stmts.length) {

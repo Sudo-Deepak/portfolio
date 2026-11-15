@@ -12,10 +12,10 @@ export const site = {
   resumeUrl: 'resume.pdf',
   // Cloudflare Worker backend (analytics + secure admin + resume storage).
   // After you deploy the Worker, replace this with its real URL, e.g.
-  // 'https://portfolio-backend.<your-subdomain>.workers.dev' (no trailing slash).
+  // 'https://portfolio.<your-subdomain>.workers.dev' (no trailing slash).
   // While it still contains "CHANGE-ME" the site keeps working: the resume link
   // falls back to /public and analytics beacons are skipped.
-  workerUrl: 'https://portfolio-backend.sudo-deepak.workers.dev',
+  workerUrl: 'https://portfolio.sudo-deepak.workers.dev',
   url: 'https://sudo-deepak.github.io/portfolio',
   description:
     'Senior Software Developer with 4+ years of experience designing scalable, secure, high-performance enterprise systems with Java, Spring Boot, microservices, and cloud.',

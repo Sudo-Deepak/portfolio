@@ -46,7 +46,7 @@ npx wrangler secret put SESSION_SECRET            # any long random string
 npm run deploy
 ```
 
-After deploy, wrangler prints the Worker URL (e.g. `https://portfolio-backend.<your-subdomain>.workers.dev`).
+After deploy, wrangler prints the Worker URL (e.g. `https://portfolio.<your-subdomain>.workers.dev`).
 
 1. Put that URL into **`src/data/site.ts` → `workerUrl`** (no trailing slash) and push the site.
 2. Open **`<workerUrl>/admin`**, log in, and upload your resume (`public/resume.pdf`) once to seed it.
