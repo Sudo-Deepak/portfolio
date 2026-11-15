@@ -1,5 +1,48 @@
 // Self-contained HTML served by the Worker itself, so the admin page, its login
 // POST, and all /admin/api/* calls are same-origin — SameSite=Strict cookies work.
+//
+// Design: SaaS-style dashboard — left sidebar nav, top bar, light/dark toggle,
+// compact "data-dense" layout. Charts use Chart.js (CDN) for the trend line and
+// device/browser/OS doughnuts; ranked top-N lists stay hand-rolled CSS bars; the
+// hour×day heatmap stays hand-rolled. Theming is driven by CSS custom properties
+// switched via [data-theme] on <html>.
+
+const INTER =
+  '<link rel="preconnect" href="https://fonts.googleapis.com">' +
+  '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>' +
+  '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">';
+
+// Set the theme before first paint to avoid a flash of the wrong palette.
+const THEME_BOOT =
+  "<script>(function(){try{var t=localStorage.getItem('pf_admin_theme')||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>";
+
+const BASE_CSS = `
+  *{box-sizing:border-box;}
+  :root, html[data-theme='dark']{
+    --bg:#0b1120; --surface:#111827; --surface-2:#0f1729; --line:#1f2937;
+    --text:#e5e7eb; --text-dim:#94a3b8; --text-mute:#64748b;
+    --brand:#3b82f6; --accent:#22d3ee; --shadow:0 1px 3px rgba(0,0,0,0.4);
+    color-scheme:dark;
+  }
+  html[data-theme='light']{
+    --bg:#f1f5f9; --surface:#ffffff; --surface-2:#f1f5f9; --line:#e2e8f0;
+    --text:#0f172a; --text-dim:#475569; --text-mute:#94a3b8;
+    --brand:#2563eb; --accent:#0891b2; --shadow:0 1px 2px rgba(15,23,42,0.06);
+    color-scheme:light;
+  }
+  body{margin:0;font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text);font-size:14px;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;}
+  .muted{color:var(--text-dim);font-size:12.5px;}
+  code{background:var(--surface-2);padding:1px 6px;border-radius:4px;font-size:12px;border:1px solid var(--line);}
+  .btn{background:var(--brand);color:#fff;border:0;border-radius:9px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
+  .btn:hover{filter:brightness(1.07);}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--text-dim);}
+  .btn.danger{background:#dc2626;}
+  .icon-btn{background:var(--surface);border:1px solid var(--line);color:var(--text-dim);width:34px;height:34px;border-radius:9px;cursor:pointer;display:inline-grid;place-items:center;font-size:15px;line-height:1;}
+  .icon-btn:hover{color:var(--text);}
+  input[type=text],input[type=file]{padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit;}
+  input[type=text]:focus,input[type=file]:focus{outline:2px solid var(--brand);outline-offset:1px;}
+`;
 
 export function loginPage(error: boolean): string {
   return `<!doctype html>
@@ -9,56 +52,81 @@ export function loginPage(error: boolean): string {
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="robots" content="noindex, nofollow" />
 <title>Admin Login</title>
+${THEME_BOOT}
+${INTER}
 <style>
-  :root { color-scheme: dark; }
-  body { margin:0; min-height:100vh; display:grid; place-items:center; font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; background:#0b1120; color:#e2e8f0; }
-  form { background:#111827; border:1px solid #1e293b; border-radius:14px; padding:28px; width:300px; }
-  h1 { font-size:18px; margin:0 0 18px; }
-  label { display:block; font-size:13px; color:#94a3b8; margin:12px 0 4px; }
-  input { width:100%; padding:10px; border-radius:8px; border:1px solid #334155; background:#0b1120; color:#e2e8f0; font-size:14px; }
-  button { width:100%; margin-top:18px; background:#2563eb; color:#fff; border:0; border-radius:8px; padding:11px; font-weight:600; font-size:14px; cursor:pointer; }
-  .err { color:#f87171; font-size:13px; margin-top:12px; }
+${BASE_CSS}
+  body{min-height:100vh;display:grid;place-items:center;padding:20px;
+    background:
+      radial-gradient(900px 500px at 15% -10%, rgba(37,99,235,0.18), transparent 60%),
+      radial-gradient(700px 500px at 110% 110%, rgba(34,211,238,0.14), transparent 55%),
+      var(--bg);}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:30px;width:340px;box-shadow:0 20px 60px -20px rgba(0,0,0,0.5);}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:22px;}
+  .mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--brand),var(--accent));box-shadow:0 0 24px -4px var(--brand);}
+  .brand h1{font-size:17px;margin:0;font-weight:800;letter-spacing:-0.3px;}
+  .brand p{margin:2px 0 0;font-size:12px;color:var(--text-dim);}
+  label{display:block;font-size:12.5px;color:var(--text-dim);margin:14px 0 5px;font-weight:500;}
+  input{width:100%;}
+  .card .btn{width:100%;margin-top:20px;padding:11px;font-size:14px;}
+  .err{color:#ef4444;font-size:13px;margin:14px 0 0;text-align:center;}
 </style>
 </head>
 <body>
-<form method="POST" action="/admin/login">
-  <h1>Portfolio Admin</h1>
+<form class="card" method="POST" action="/admin/login">
+  <div class="brand">
+    <span class="mark"></span>
+    <div><h1>Portfolio Admin</h1><p>Analytics &amp; leads</p></div>
+  </div>
   <label for="username">Username</label>
   <input id="username" name="username" autocomplete="username" required />
   <label for="password">Password</label>
   <input id="password" name="password" type="password" autocomplete="current-password" required />
-  <button type="submit">Log in</button>
+  <button class="btn" type="submit">Log in</button>
   ${error ? '<p class="err">Invalid username or password.</p>' : ''}
 </form>
 </body>
 </html>`;
 }
 
+// SVG icons for the sidebar (16px, currentColor).
+const ICON = {
+  overview: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>',
+  audience: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  traffic: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>',
+  content: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+  leads: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
+  settings: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+};
+
 // Client-side dashboard logic. Written with string concatenation and single
-// quotes only — NO backticks and NO ${ } — so it can live inside this template
-// literal without being interpolated. All charts are hand-rolled inline SVG/HTML
-// (no library, no CDN) so the page stays fully self-contained and private.
+// quotes only — NO backticks and NO ${ } — so it can live inside the dashboardPage
+// template literal without being interpolated.
 const DASHBOARD_JS = `
 (function(){
-  var state = { range: 30 };
+  var state = { range: 30, data: null };
+  var charts = {};
+  var PALETTE = ['#2563eb','#22d3ee','#8b5cf6','#f59e0b','#10b981','#ec4899','#ef4444','#14b8a6','#a855f7','#64748b'];
 
-  function esc(s){
-    return String(s==null?'':s).replace(/[&<>"]/g, function(c){
-      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c];
-    });
-  }
+  if(window.Chart){ Chart.defaults.font.family = "'Inter', system-ui, sans-serif"; Chart.defaults.font.size = 11; }
+
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); }
   function num(n){ n=+n||0; return n.toLocaleString(); }
-  function fmtDur(sec){
-    sec=+sec||0;
-    if(sec<60) return sec+'s';
-    var m=Math.floor(sec/60), s=sec%60;
-    return m+'m '+(s<10?'0':'')+s+'s';
-  }
+  function fmtDur(sec){ sec=+sec||0; if(sec<60) return sec+'s'; var m=Math.floor(sec/60), s=sec%60; return m+'m '+(s<10?'0':'')+s+'s'; }
   function setText(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; }
   function setHtml(id,v){ var el=document.getElementById(id); if(el) el.innerHTML=v; }
   function col(rows,key){ var a=[],i; rows=rows||[]; for(i=0;i<rows.length;i++) a.push(+rows[i][key]||0); return a; }
+  function C(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
 
-  // Map a value series to an SVG polyline + filled-area path.
+  function relTime(ts){
+    var s=Math.floor((Date.now()-ts)/1000);
+    if(s<60) return 'just now';
+    if(s<3600) return Math.floor(s/60)+'m ago';
+    if(s<86400) return Math.floor(s/3600)+'h ago';
+    if(s<604800) return Math.floor(s/86400)+'d ago';
+    return new Date(ts).toLocaleDateString();
+  }
+
   function series(vals,W,H,p,max){
     var n=vals.length, step = n>1 ? (W-2*p)/(n-1) : 0;
     var line='', area='M '+p.toFixed(1)+' '+(H-p).toFixed(1), i;
@@ -70,17 +138,15 @@ const DASHBOARD_JS = `
     area += ' L '+(p+(n-1)*step).toFixed(1)+' '+(H-p).toFixed(1)+' Z';
     return { line:line, area:area };
   }
-
   function sparkline(vals){
     vals=vals||[]; if(!vals.length) return '';
-    var W=100,H=28,p=2,max=1,i;
+    var W=100,H=26,p=2,max=1,i;
     for(i=0;i<vals.length;i++){ if(vals[i]>max) max=vals[i]; }
     var s=series(vals,W,H,p,max);
     return '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" class="spark-svg">'
       +'<path d="'+s.area+'" class="spark-area"/>'
       +'<polyline points="'+s.line+'" class="spark-line" vector-effect="non-scaling-stroke"/></svg>';
   }
-
   function deltaHtml(cur,prev){
     cur=+cur||0; prev=+prev||0;
     if(prev<=0){ return cur>0 ? '<span class="delta up">new</span>' : '<span class="delta flat">\\u2013</span>'; }
@@ -88,21 +154,6 @@ const DASHBOARD_JS = `
     if(pct>0) return '<span class="delta up">\\u25b2 '+pct+'%</span>';
     if(pct<0) return '<span class="delta down">\\u25bc '+(-pct)+'%</span>';
     return '<span class="delta flat">0%</span>';
-  }
-
-  function trendChart(daily){
-    if(!daily || !daily.length) return '<p class="muted">No data in this range yet.</p>';
-    var views=col(daily,'views'), uniq=col(daily,'uniques'), i;
-    var W=600,H=200,p=10,max=1;
-    for(i=0;i<views.length;i++){ if(views[i]>max)max=views[i]; if(uniq[i]>max)max=uniq[i]; }
-    var sv=series(views,W,H,p,max), su=series(uniq,W,H,p,max);
-    var first=daily[0].day, last=daily[daily.length-1].day;
-    return '<div class="chart"><svg viewBox="0 0 '+W+' '+H+'" class="chart-svg" preserveAspectRatio="none">'
-      +'<path d="'+sv.area+'" class="area-v"/>'
-      +'<polyline points="'+sv.line+'" class="line-v" vector-effect="non-scaling-stroke"/>'
-      +'<polyline points="'+su.line+'" class="line-u" vector-effect="non-scaling-stroke"/></svg></div>'
-      +'<div class="axis"><span>'+esc(first)+'</span><span>peak '+num(max)+'</span><span>'+esc(last)+'</span></div>'
-      +'<div class="legend"><span class="lg lg-v">Page views</span><span class="lg lg-u">Unique visitors</span></div>';
   }
 
   function bars(rows,lk,vk){
@@ -131,8 +182,9 @@ const DASHBOARD_JS = `
     for(d=0;d<7;d++){
       out+='<div class="heat-row"><span class="heat-day">'+days[d]+'</span>';
       for(hh=0;hh<24;hh++){
-        var val=m[d][hh], o = val? (0.15+0.85*(val/max)) : 0.04;
-        out+='<span class="heat-cell" style="background:rgba(56,189,248,'+o.toFixed(3)+')" title="'+days[d]+' '+hh+':00 — '+val+' views"></span>';
+        var val=m[d][hh], o = val? (0.18+0.82*(val/max)) : 0;
+        var style = val? ('background:rgba(56,130,246,'+o.toFixed(3)+')') : '';
+        out+='<span class="heat-cell" style="'+style+'" title="'+days[d]+' '+hh+':00 \\u2014 '+val+' views"></span>';
       }
       out+='</div>';
     }
@@ -140,7 +192,54 @@ const DASHBOARD_JS = `
     return out;
   }
 
+  function trendChart(daily){
+    var el=document.getElementById('trendCanvas'); if(!el || typeof Chart==='undefined') return;
+    daily=daily||[];
+    var labels=[],views=[],uniq=[],i;
+    for(i=0;i<daily.length;i++){ labels.push(daily[i].day); views.push(+daily[i].views||0); uniq.push(+daily[i].uniques||0); }
+    if(charts.trend){ charts.trend.destroy(); charts.trend=null; }
+    var brand=C('--brand'), accent=C('--accent'), line=C('--line'), dim=C('--text-dim');
+    charts.trend=new Chart(el,{
+      type:'line',
+      data:{ labels:labels, datasets:[
+        { label:'Page views', data:views, borderColor:brand, backgroundColor:'rgba(59,130,246,0.14)', fill:true, tension:0.35, pointRadius:0, borderWidth:2 },
+        { label:'Unique visitors', data:uniq, borderColor:accent, backgroundColor:'transparent', fill:false, tension:0.35, pointRadius:0, borderWidth:2, borderDash:[5,4] }
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false,
+        interaction:{ mode:'index', intersect:false },
+        plugins:{ legend:{ display:true, position:'top', align:'end', labels:{ usePointStyle:true, boxWidth:8, boxHeight:8, color:dim, padding:14 } }, tooltip:{ mode:'index', intersect:false } },
+        scales:{ x:{ grid:{ display:false }, ticks:{ maxTicksLimit:8, color:dim, font:{ size:10 }, maxRotation:0 } },
+                 y:{ beginAtZero:true, grid:{ color:line }, border:{ display:false }, ticks:{ precision:0, color:dim, font:{ size:10 }, maxTicksLimit:6 } } }
+      }
+    });
+  }
+
+  function donut(id, rows, lk, vk){
+    var el=document.getElementById(id); if(!el || typeof Chart==='undefined') return;
+    rows=rows||[];
+    var labels=[],data=[],i;
+    for(i=0;i<rows.length;i++){ labels.push(String(rows[i][lk]||'?')); data.push(+rows[i][vk]||0); }
+    if(charts[id]){ charts[id].destroy(); charts[id]=null; }
+    if(!data.length){ var p=document.getElementById(id+'-empty'); if(p) p.style.display=''; return; }
+    var pe=document.getElementById(id+'-empty'); if(pe) pe.style.display='none';
+    charts[id]=new Chart(el,{
+      type:'doughnut',
+      data:{ labels:labels, datasets:[{ data:data, backgroundColor:PALETTE, borderColor:C('--surface'), borderWidth:2, hoverOffset:4 }] },
+      options:{ responsive:true, maintainAspectRatio:false, cutout:'62%',
+        plugins:{ legend:{ position:'right', labels:{ usePointStyle:true, boxWidth:8, boxHeight:8, color:C('--text-dim'), font:{ size:11 }, padding:9 } } } }
+    });
+  }
+
+  function updateBadge(unread){
+    unread=+unread||0;
+    var nb=document.getElementById('nav-leads-badge');
+    var lb=document.getElementById('leads-badge');
+    if(nb){ if(unread>0){ nb.textContent=unread; nb.style.display=''; } else nb.style.display='none'; }
+    if(lb){ if(unread>0){ lb.textContent=unread+' new'; lb.style.display=''; } else lb.style.display='none'; }
+  }
+
   function render(d){
+    state.data = d;
     var cur=d.trend.current, prev=d.trend.previous;
     setText('pv', num(cur.pageviews)); setHtml('pv-delta', deltaHtml(cur.pageviews,prev.pageviews));
     setText('pv-all', num(d.totals.pageviews)); setHtml('pv-spark', sparkline(col(d.daily,'views')));
@@ -150,9 +249,8 @@ const DASHBOARD_JS = `
     setText('dl-all', num(d.totals.downloads)); setHtml('dl-spark', sparkline(col(d.daily,'downloads')));
     var cc = cur.uniques? cur.downloads/cur.uniques*100 : 0;
     var pc = prev.uniques? prev.downloads/prev.uniques*100 : 0;
-    setText('cv', cc.toFixed(1)); setHtml('cv-delta', deltaHtml(cc,pc));
-    setHtml('cv-spark', sparkline(col(d.daily,'downloads')));
-    // Engagement: sessions, bounce rate, avg session duration, new vs returning.
+    setText('cv', cc.toFixed(1)); setHtml('cv-delta', deltaHtml(cc,pc)); setHtml('cv-spark', sparkline(col(d.daily,'downloads')));
+
     var se = d.sessions||{count:0,bounced:0,avgDuration:0};
     var vi = d.visitors||{new:0,returning:0};
     var bounce = se.count ? Math.round(se.bounced/se.count*100) : 0;
@@ -162,27 +260,28 @@ const DASHBOARD_JS = `
     setText('eg-new', num(vi.new));
     setText('eg-ret', num(vi.returning));
 
-    setHtml('trend', trendChart(d.daily));
+    trendChart(d.daily);
     setHtml('heatmap', heatmapChart(d.heatmap));
-    setHtml('interactions', bars(d.interactions,'label','n'));
-    setHtml('scroll', bars(d.scroll,'label','n'));
 
-    // Leads unread badge (list is loaded lazily on first open).
-    var lead = d.leads||{total:0,unread:0};
-    var badge = document.getElementById('leads-badge');
-    if(badge){ if(lead.unread>0){ badge.textContent=lead.unread+' new'; badge.style.display=''; } else { badge.style.display='none'; } }
-    setText('leads-total', num(lead.total));
-    setHtml('channels', bars(d.channels,'channel','n'));
-    setHtml('audiences', bars(d.audiences,'audience','n'));
-    setHtml('pages', bars(d.topPages,'path','views'));
-    setHtml('sections', bars(d.sections,'section','views'));
+    donut('devicesCanvas', d.devices, 'device', 'n');
+    donut('browsersCanvas', d.browsers, 'browser', 'n');
+    donut('osCanvas', d.os, 'os', 'n');
     setHtml('countries', bars(d.countries,'country','n'));
     setHtml('cities', bars(d.cities,'city','n'));
     setHtml('regions', bars(d.regions,'region','n'));
+
+    setHtml('channels', bars(d.channels,'channel','n'));
+    setHtml('audiences', bars(d.audiences,'audience','n'));
     setHtml('referrers', bars(d.referrers,'ref','n'));
-    setHtml('devices', bars(d.devices,'device','n'));
-    setHtml('browsers', bars(d.browsers,'browser','n'));
-    setHtml('os', bars(d.os,'os','n'));
+
+    setHtml('pages', bars(d.topPages,'path','views'));
+    setHtml('sections', bars(d.sections,'section','views'));
+    setHtml('interactions', bars(d.interactions,'label','n'));
+    setHtml('scroll', bars(d.scroll,'label','n'));
+
+    var lead = d.leads||{total:0,unread:0};
+    updateBadge(lead.unread);
+    setText('leads-total', num(lead.total));
   }
 
   function load(){
@@ -201,14 +300,19 @@ const DASHBOARD_JS = `
       var r=rows[i];
       var isNew = (+r.ts) > seen;
       var loc=[r.city,r.region,r.country].filter(Boolean).join(', ');
-      var when=new Date(+r.ts).toLocaleString();
+      var initials=(String(r.name||'?').trim().charAt(0)||'?').toUpperCase();
+      var chips='<span class="chip">'+esc(r.channel||'Direct')+'</span>';
+      if(loc) chips+='<span class="chip">'+esc(loc)+'</span>';
+      if(!r.emailed) chips+='<span class="chip warn">email not sent</span>';
       h += '<div class="lead'+(isNew?' lead-new':'')+'">'
+        +'<div class="lead-av">'+esc(initials)+'</div>'
+        +'<div class="lead-body">'
         +'<div class="lead-top"><span class="lead-name">'+esc(r.name)+(isNew?' <span class="lead-dot">new</span>':'')+'</span>'
-        +'<span class="lead-when">'+esc(when)+'</span></div>'
-        +'<div class="lead-meta"><a href="mailto:'+esc(r.email)+'">'+esc(r.email)+'</a>'
-        +' · '+esc(r.channel||'Direct')+(loc?(' · '+esc(loc)):'')
-        +(r.emailed?'':' · <span class="lead-noemail">email not sent</span>')+'</div>'
-        +'<div class="lead-msg">'+esc(r.message)+'</div></div>';
+        +'<span class="lead-when" title="'+esc(new Date(+r.ts).toLocaleString())+'">'+esc(relTime(+r.ts))+'</span></div>'
+        +'<div><a href="mailto:'+esc(r.email)+'">'+esc(r.email)+'</a></div>'
+        +'<div class="chips">'+chips+'</div>'
+        +'<div class="lead-msg">'+esc(r.message)+'</div>'
+        +'</div></div>';
     }
     setHtml('leads-list', h);
   }
@@ -220,8 +324,37 @@ const DASHBOARD_JS = `
     }).then(function(d){ if(d) renderLeads(d); }).catch(function(){});
   }
 
+  // ---- Navigation (hash-based) ----
+  var TITLES = { overview:'Overview', audience:'Audience', traffic:'Traffic', content:'Content', leads:'Leads', settings:'Settings' };
+  function currentView(){ var h=(location.hash||'').replace('#',''); return TITLES[h]?h:'overview'; }
+  function showView(name){
+    var views=document.querySelectorAll('[data-view]'), i;
+    for(i=0;i<views.length;i++) views[i].classList.toggle('hidden', views[i].getAttribute('data-view')!==name);
+    var items=document.querySelectorAll('[data-nav]');
+    for(i=0;i<items.length;i++) items[i].classList.toggle('on', items[i].getAttribute('data-nav')===name);
+    setText('view-title', TITLES[name]||'Overview');
+    var sb=document.getElementById('sidebar'); if(sb) sb.classList.remove('open');
+    var ov=document.getElementById('overlay'); if(ov) ov.classList.remove('on');
+    window.scrollTo(0,0);
+  }
+  window.addEventListener('hashchange', function(){ showView(currentView()); });
+
+  // ---- Theme ----
+  function setTheme(t){
+    document.documentElement.setAttribute('data-theme', t);
+    try{ localStorage.setItem('pf_admin_theme', t); }catch(e){}
+    var tb=document.getElementById('theme-btn'); if(tb) tb.textContent = (t==='dark' ? '\\u2600\\ufe0f' : '\\u263d');
+    if(state.data) render(state.data); // recolor charts for the new palette
+  }
+  var themeBtn=document.getElementById('theme-btn');
+  if(themeBtn) themeBtn.addEventListener('click', function(){
+    var cur=document.documentElement.getAttribute('data-theme')||'dark';
+    setTheme(cur==='dark'?'light':'dark');
+  });
+
+  // ---- Range control ----
   var rangeBox = document.getElementById('ranges');
-  rangeBox.addEventListener('click', function(e){
+  if(rangeBox) rangeBox.addEventListener('click', function(e){
     var b = e.target.closest ? e.target.closest('button[data-range]') : null;
     if(!b) return;
     state.range = +b.getAttribute('data-range');
@@ -230,6 +363,19 @@ const DASHBOARD_JS = `
     load();
   });
 
+  // ---- Mobile sidebar ----
+  var menuBtn=document.getElementById('menu-btn');
+  if(menuBtn) menuBtn.addEventListener('click', function(){
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('overlay').classList.toggle('on');
+  });
+  var overlay=document.getElementById('overlay');
+  if(overlay) overlay.addEventListener('click', function(){
+    document.getElementById('sidebar').classList.remove('open');
+    overlay.classList.remove('on');
+  });
+
+  // ---- Settings handlers (unchanged logic) ----
   document.getElementById('resume-form').addEventListener('submit', function(e){
     e.preventDefault();
     var msg = document.getElementById('resume-msg');
@@ -265,8 +411,7 @@ const DASHBOARD_JS = `
   if(exportBox) exportBox.addEventListener('click', function(e){
     var b = e.target.closest ? e.target.closest('button[data-export]') : null;
     if(!b) return;
-    var type = b.getAttribute('data-export');
-    window.location.href = '/admin/api/export?type='+type+'&range='+state.range;
+    window.location.href = '/admin/api/export?type='+b.getAttribute('data-export')+'&range='+state.range;
   });
 
   document.getElementById('reset-btn').addEventListener('click', function(){
@@ -279,10 +424,30 @@ const DASHBOARD_JS = `
       .catch(function(){ msg.className='msg err'; msg.textContent='Failed.'; });
   });
 
+  // ---- Init ----
+  var t0=document.documentElement.getAttribute('data-theme')||'dark';
+  var tb0=document.getElementById('theme-btn'); if(tb0) tb0.textContent=(t0==='dark'?'\\u2600\\ufe0f':'\\u263d');
+  showView(currentView());
   load();
   loadLeads();
 })();
 `;
+
+function navItem(key: string, label: string, badge?: boolean): string {
+  return (
+    `<a class="nav-item" data-nav="${key}" href="#${key}">${(ICON as Record<string, string>)[key]}<span>${label}</span>` +
+    (badge ? '<span class="nav-badge" id="nav-leads-badge" style="display:none"></span>' : '') +
+    `</a>`
+  );
+}
+
+function donutPanel(title: string, id: string): string {
+  return (
+    `<section class="panel"><h2>${title}</h2>` +
+    `<div class="donut-box"><canvas id="${id}"></canvas></div>` +
+    `<p class="muted" id="${id}-empty" style="display:none">No data yet.</p></section>`
+  );
+}
 
 export function dashboardPage(filename: string): string {
   return `<!doctype html>
@@ -292,237 +457,272 @@ export function dashboardPage(filename: string): string {
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="robots" content="noindex, nofollow" />
 <title>Portfolio Analytics</title>
+${THEME_BOOT}
+${INTER}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
 <style>
-  :root { color-scheme: dark; }
-  * { box-sizing: border-box; }
-  body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; background:#0b1120; color:#e2e8f0; }
-  header { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:16px 24px; border-bottom:1px solid #1e293b; position:sticky; top:0; background:#0b1120; z-index:5; }
-  header h1 { font-size:18px; margin:0; }
-  main { max-width:1000px; margin:0 auto; padding:24px; }
-  .btn { background:#2563eb; color:#fff; border:0; border-radius:8px; padding:9px 14px; font-size:14px; font-weight:600; cursor:pointer; }
-  .btn.secondary { background:#1e293b; }
-  .btn.danger { background:#b91c1c; }
-  .muted { color:#94a3b8; font-size:13px; }
+${BASE_CSS}
+  .app{display:flex;min-height:100vh;}
+  .sidebar{width:216px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--line);position:sticky;top:0;height:100vh;display:flex;flex-direction:column;padding:16px 12px;gap:3px;}
+  .brand{display:flex;align-items:center;gap:9px;padding:6px 10px 18px;font-weight:800;font-size:15px;letter-spacing:-0.3px;}
+  .brand .mark{width:24px;height:24px;border-radius:8px;background:linear-gradient(135deg,var(--brand),var(--accent));box-shadow:0 0 18px -4px var(--brand);flex-shrink:0;}
+  .nav{display:flex;flex-direction:column;gap:2px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;color:var(--text-dim);text-decoration:none;font-weight:500;font-size:13.5px;}
+  .nav-item svg{width:17px;height:17px;flex-shrink:0;}
+  .nav-item:hover{background:var(--surface-2);color:var(--text);}
+  .nav-item.on{background:linear-gradient(135deg,rgba(37,99,235,0.16),rgba(34,211,238,0.12));color:var(--text);box-shadow:inset 0 0 0 1px rgba(37,99,235,0.28);}
+  .nav-badge{margin-left:auto;background:#ef4444;color:#fff;font-size:10px;font-weight:700;min-width:18px;text-align:center;padding:1px 6px;border-radius:999px;}
+  .sidebar-foot{margin-top:auto;padding:10px;font-size:11px;color:var(--text-mute);}
 
-  .ranges { display:inline-flex; gap:4px; background:#111827; border:1px solid #1e293b; border-radius:10px; padding:4px; }
-  .ranges button { background:transparent; color:#94a3b8; border:0; border-radius:7px; padding:6px 12px; font-size:13px; font-weight:600; cursor:pointer; }
-  .ranges button.on { background:#2563eb; color:#fff; }
+  .main{flex:1;min-width:0;display:flex;flex-direction:column;}
+  .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;padding:11px 20px;background:color-mix(in srgb, var(--bg) 88%, transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);}
+  .topbar h1{font-size:16px;margin:0;font-weight:700;}
+  .spacer{flex:1;}
+  .ranges{display:inline-flex;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:3px;}
+  .ranges button{background:transparent;color:var(--text-dim);border:0;border-radius:6px;padding:5px 10px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;}
+  .ranges button.on{background:var(--brand);color:#fff;}
+  .menu{display:none;}
 
-  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-bottom:24px; }
-  .card { background:#111827; border:1px solid #1e293b; border-radius:12px; padding:16px; }
-  .card-top { display:flex; align-items:center; justify-content:space-between; gap:8px; }
-  .card-top .l { color:#94a3b8; font-size:13px; }
-  .card .n { font-size:30px; font-weight:800; margin-top:2px; font-variant-numeric:tabular-nums; }
-  .card .sub { color:#64748b; font-size:12px; margin-top:6px; }
-  .card .sub b { color:#94a3b8; font-weight:600; }
-  .spark { height:28px; margin-top:8px; color:#38bdf8; }
-  .spark-svg { width:100%; height:28px; display:block; }
-  .spark-line { fill:none; stroke:currentColor; stroke-width:1.5; }
-  .spark-area { fill:currentColor; opacity:0.14; stroke:none; }
-  .delta { font-size:12px; font-weight:700; white-space:nowrap; }
-  .delta.up { color:#34d399; }
-  .delta.down { color:#f87171; }
-  .delta.flat { color:#64748b; }
+  .content{padding:18px 20px 44px;max-width:1180px;width:100%;}
+  .view.hidden{display:none;}
 
-  section.panel { background:#111827; border:1px solid #1e293b; border-radius:12px; padding:18px; margin-bottom:20px; }
-  section.panel h2 { font-size:15px; margin:0 0 12px; color:#cbd5e1; }
+  .grid{display:grid;gap:12px;}
+  .kpis{grid-template-columns:repeat(auto-fit,minmax(176px,1fr));margin-bottom:12px;}
+  .stats{grid-template-columns:repeat(auto-fit,minmax(118px,1fr));}
+  .g2{grid-template-columns:1fr 1fr;}
+  .g3{grid-template-columns:1fr 1fr 1fr;}
 
-  .chart-svg { width:100%; height:auto; display:block; }
-  .area-v { fill:#2563eb; opacity:0.16; stroke:none; }
-  .line-v { fill:none; stroke:#2563eb; stroke-width:2; }
-  .line-u { fill:none; stroke:#38bdf8; stroke-width:2; stroke-dasharray:4 3; }
-  .axis { display:flex; justify-content:space-between; color:#64748b; font-size:12px; margin-top:6px; }
-  .legend { display:flex; gap:16px; margin-top:8px; font-size:12px; color:#94a3b8; }
-  .lg::before { content:''; display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:6px; vertical-align:middle; }
-  .lg-v::before { background:#2563eb; }
-  .lg-u::before { background:#38bdf8; }
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:var(--shadow);}
+  .card .ct{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .card .l{color:var(--text-dim);font-size:12px;font-weight:500;}
+  .card .n{font-size:26px;font-weight:800;margin-top:3px;font-variant-numeric:tabular-nums;letter-spacing:-0.6px;}
+  .card .sub{color:var(--text-mute);font-size:11.5px;margin-top:5px;}
+  .card .sub b{color:var(--text-dim);font-weight:600;}
+  .spark{height:26px;margin-top:7px;color:var(--accent);}
+  .spark-svg{width:100%;height:26px;display:block;}
+  .spark-line{fill:none;stroke:currentColor;stroke-width:1.5;}
+  .spark-area{fill:currentColor;opacity:0.14;stroke:none;}
+  .delta{font-size:11.5px;font-weight:700;white-space:nowrap;}
+  .delta.up{color:#10b981;} .delta.down{color:#ef4444;} .delta.flat{color:var(--text-mute);}
 
-  .bar { margin:10px 0; }
-  .bar-head { display:flex; justify-content:space-between; gap:8px; font-size:13px; margin-bottom:4px; }
-  .bar-l { color:#cbd5e1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:78%; }
-  .bar-v { color:#94a3b8; font-variant-numeric:tabular-nums; }
-  .bar-track { height:7px; background:#1e293b; border-radius:999px; overflow:hidden; }
-  .bar-fill { height:100%; background:linear-gradient(90deg,#2563eb,#38bdf8); border-radius:999px; }
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:11px 13px;box-shadow:var(--shadow);}
+  .stat .l{color:var(--text-dim);font-size:11.5px;}
+  .stat .v{font-size:19px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums;}
 
-  .heat { display:flex; flex-direction:column; gap:3px; }
-  .heat-row { display:grid; grid-template-columns:34px repeat(24,1fr); gap:3px; align-items:center; }
-  .heat-day { font-size:11px; color:#94a3b8; }
-  .heat-cell { height:14px; border-radius:3px; }
-  .heat-x { display:flex; justify-content:space-between; margin:6px 0 0 37px; color:#64748b; font-size:11px; }
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow);margin-bottom:12px;}
+  .panel h2{font-size:11.5px;margin:0 0 11px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:11px;}
+  .panel-head h2{margin:0;}
+  .g2 .panel, .g3 .panel{margin-bottom:0;}
+  .section-label{font-size:11px;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-mute);font-weight:700;margin:18px 2px 10px;}
 
-  .row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
-  input[type=file] { color:#cbd5e1; font-size:14px; }
-  input[type=text] { padding:8px 10px; border-radius:8px; border:1px solid #334155; background:#0b1120; color:#e2e8f0; font-size:14px; min-width:260px; flex:1 1 260px; }
-  .msg { font-size:13px; }
-  .msg.ok { color:#34d399; } .msg.err { color:#f87171; }
-  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
-  .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; }
-  @media (max-width:720px){ .grid2, .grid3 { grid-template-columns:1fr; } }
-  code { background:#1e293b; padding:1px 6px; border-radius:4px; }
+  .chart-box{position:relative;height:260px;}
+  .donut-box{position:relative;height:184px;}
 
-  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:16px; }
-  .stat .l { color:#94a3b8; font-size:12px; }
-  .stat .v { font-size:22px; font-weight:700; margin-top:2px; font-variant-numeric:tabular-nums; }
+  .bar{margin:9px 0;}
+  .bar-head{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;margin-bottom:4px;}
+  .bar-l{color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:76%;}
+  .bar-v{color:var(--text-dim);font-variant-numeric:tabular-nums;}
+  .bar-track{height:6px;background:var(--surface-2);border-radius:999px;overflow:hidden;}
+  .bar-fill{height:100%;background:linear-gradient(90deg,var(--brand),var(--accent));border-radius:999px;}
 
-  .panel-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 12px; }
-  .panel-head h2 { margin:0; }
-  .badge { background:#b91c1c; color:#fff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; }
+  .heat{display:flex;flex-direction:column;gap:3px;}
+  .heat-row{display:grid;grid-template-columns:30px repeat(24,1fr);gap:2px;align-items:center;}
+  .heat-day{font-size:10.5px;color:var(--text-dim);}
+  .heat-cell{height:13px;border-radius:3px;background:var(--surface-2);}
+  .heat-x{display:flex;justify-content:space-between;margin:5px 0 0 33px;color:var(--text-mute);font-size:10.5px;}
 
-  .lead { border-top:1px solid #1e293b; padding:12px 0; }
-  .lead:first-of-type { border-top:0; }
-  .lead-new { background:rgba(37,99,235,0.06); margin:0 -8px; padding:12px 8px; border-radius:8px; border-top:0; }
-  .lead-top { display:flex; justify-content:space-between; gap:8px; align-items:baseline; }
-  .lead-name { font-weight:600; color:#e2e8f0; }
-  .lead-dot { background:#2563eb; color:#fff; font-size:10px; font-weight:700; padding:1px 6px; border-radius:999px; margin-left:6px; vertical-align:middle; }
-  .lead-when { color:#64748b; font-size:12px; white-space:nowrap; }
-  .lead-meta { font-size:12px; color:#94a3b8; margin:3px 0 6px; }
-  .lead-meta a { color:#38bdf8; text-decoration:none; }
-  .lead-noemail { color:#f59e0b; }
-  .lead-msg { font-size:13px; color:#cbd5e1; white-space:pre-wrap; }
-  .leads-list { max-height:520px; overflow:auto; }
+  .badge{background:#ef4444;color:#fff;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;}
+  .lead{display:flex;gap:11px;padding:12px 0;border-top:1px solid var(--line);}
+  .lead:first-child{border-top:0;}
+  .lead-av{width:36px;height:36px;border-radius:10px;flex-shrink:0;display:grid;place-items:center;font-weight:700;font-size:14px;color:#fff;background:linear-gradient(135deg,var(--brand),var(--accent));}
+  .lead-body{flex:1;min-width:0;}
+  .lead-top{display:flex;justify-content:space-between;gap:8px;align-items:baseline;}
+  .lead-name{font-weight:600;}
+  .lead-dot{background:var(--brand);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:999px;margin-left:6px;}
+  .lead-when{color:var(--text-mute);font-size:11.5px;white-space:nowrap;}
+  .lead-body a{color:var(--accent);text-decoration:none;font-size:13px;}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin:5px 0 6px;}
+  .chip{font-size:11px;background:var(--surface-2);color:var(--text-dim);padding:2px 9px;border-radius:999px;border:1px solid var(--line);}
+  .chip.warn{color:#f59e0b;border-color:rgba(245,158,11,0.3);}
+  .lead-msg{font-size:13px;color:var(--text);white-space:pre-wrap;line-height:1.5;}
+
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  .msg{font-size:12.5px;} .msg.ok{color:#10b981;} .msg.err{color:#ef4444;}
+
+  .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:40;}
+  .overlay.on{display:block;}
+  @media(max-width:860px){
+    .sidebar{position:fixed;left:0;top:0;transform:translateX(-100%);transition:transform .22s ease;z-index:50;}
+    .sidebar.open{transform:none;}
+    .menu{display:inline-grid;}
+    .g2,.g3{grid-template-columns:1fr;}
+  }
 </style>
 </head>
 <body>
-<header>
-  <h1>Portfolio Analytics</h1>
-  <div class="ranges" id="ranges">
-    <button type="button" data-range="7">7d</button>
-    <button type="button" data-range="30" class="on">30d</button>
-    <button type="button" data-range="90">90d</button>
-    <button type="button" data-range="180">180d</button>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><span class="mark"></span><span>Portfolio</span></div>
+    <nav class="nav">
+      ${navItem('overview', 'Overview')}
+      ${navItem('audience', 'Audience')}
+      ${navItem('traffic', 'Traffic')}
+      ${navItem('content', 'Content')}
+      ${navItem('leads', 'Leads', true)}
+      ${navItem('settings', 'Settings')}
+    </nav>
+    <div class="sidebar-foot">Private · noindex</div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn menu" id="menu-btn" title="Menu">&#9776;</button>
+      <h1 id="view-title">Overview</h1>
+      <div class="spacer"></div>
+      <div class="ranges" id="ranges">
+        <button type="button" data-range="7">7d</button>
+        <button type="button" data-range="30" class="on">30d</button>
+        <button type="button" data-range="90">90d</button>
+        <button type="button" data-range="180">180d</button>
+      </div>
+      <button class="icon-btn" id="theme-btn" title="Toggle theme">&#9728;</button>
+      <form method="POST" action="/admin/logout" style="margin:0"><button class="btn ghost" type="submit">Log out</button></form>
+    </header>
+
+    <main class="content">
+      <!-- OVERVIEW -->
+      <section class="view" data-view="overview">
+        <div class="grid kpis">
+          <div class="card">
+            <div class="ct"><span class="l">Page views</span><span id="pv-delta"></span></div>
+            <div class="n" id="pv">-</div><div class="spark" id="pv-spark"></div>
+            <div class="sub">all-time <b id="pv-all">-</b></div>
+          </div>
+          <div class="card">
+            <div class="ct"><span class="l">Unique visitors</span><span id="uv-delta"></span></div>
+            <div class="n" id="uv">-</div><div class="spark" id="uv-spark"></div>
+            <div class="sub">all-time <b id="uv-all">-</b></div>
+          </div>
+          <div class="card">
+            <div class="ct"><span class="l">Resume downloads</span><span id="dl-delta"></span></div>
+            <div class="n" id="dl">-</div><div class="spark" id="dl-spark"></div>
+            <div class="sub">all-time <b id="dl-all">-</b></div>
+          </div>
+          <div class="card">
+            <div class="ct"><span class="l">Downloads / 100</span><span id="cv-delta"></span></div>
+            <div class="n" id="cv">-</div><div class="spark" id="cv-spark"></div>
+            <div class="sub">resume conversion</div>
+          </div>
+        </div>
+
+        <div class="grid stats" style="margin-bottom:12px">
+          <div class="stat"><div class="l">Sessions</div><div class="v" id="eg-sessions">-</div></div>
+          <div class="stat"><div class="l">Bounce rate</div><div class="v" id="eg-bounce">-</div></div>
+          <div class="stat"><div class="l">Avg. session</div><div class="v" id="eg-dur">-</div></div>
+          <div class="stat"><div class="l">New visitors</div><div class="v" id="eg-new">-</div></div>
+          <div class="stat"><div class="l">Returning</div><div class="v" id="eg-ret">-</div></div>
+        </div>
+
+        <section class="panel"><h2>Traffic trend</h2><div class="chart-box"><canvas id="trendCanvas"></canvas></div></section>
+        <section class="panel"><h2>When visitors come (hour × day)</h2><div id="heatmap"></div></section>
+      </section>
+
+      <!-- AUDIENCE -->
+      <section class="view hidden" data-view="audience">
+        <div class="grid g3">
+          ${donutPanel('Devices', 'devicesCanvas')}
+          ${donutPanel('Browsers', 'browsersCanvas')}
+          ${donutPanel('Operating systems', 'osCanvas')}
+        </div>
+        <div class="section-label">Geography</div>
+        <div class="grid g3">
+          <section class="panel"><h2>Countries</h2><div id="countries"></div></section>
+          <section class="panel"><h2>Cities</h2><div id="cities"></div></section>
+          <section class="panel"><h2>States / regions</h2><div id="regions"></div></section>
+        </div>
+      </section>
+
+      <!-- TRAFFIC -->
+      <section class="view hidden" data-view="traffic">
+        <div class="grid g2">
+          <section class="panel">
+            <h2>Traffic sources</h2>
+            <p class="muted" style="margin:-4px 0 10px">Tag shared links, e.g. <code>?ref=linkedin</code>. Untagged visits fall back to the referrer.</p>
+            <div id="channels"></div>
+          </section>
+          <section class="panel">
+            <h2>Audience</h2>
+            <p class="muted" style="margin:-4px 0 10px">From <code>?aud=</code> tags, e.g. <code>?ref=linkedin&amp;aud=recruiter</code>.</p>
+            <div id="audiences"></div>
+          </section>
+        </div>
+        <section class="panel" style="margin-top:12px"><h2>Referrer hosts</h2><div id="referrers"></div></section>
+      </section>
+
+      <!-- CONTENT -->
+      <section class="view hidden" data-view="content">
+        <div class="grid g2">
+          <section class="panel"><h2>Top pages</h2><div id="pages"></div></section>
+          <section class="panel"><h2>Section engagement</h2><div id="sections"></div></section>
+        </div>
+        <div class="grid g2" style="margin-top:12px">
+          <section class="panel"><h2>Top interactions (CTA clicks)</h2><div id="interactions"></div></section>
+          <section class="panel"><h2>Scroll depth</h2><div id="scroll"></div></section>
+        </div>
+      </section>
+
+      <!-- LEADS -->
+      <section class="view hidden" data-view="leads">
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Leads <span class="badge" id="leads-badge" style="display:none"></span></h2>
+            <button class="btn ghost" id="leads-seen-btn" type="button">Mark all read</button>
+          </div>
+          <p class="muted" style="margin:-4px 0 12px">Every contact-form submission is stored here — <b id="leads-total">-</b> total. You're emailed too, but this list never misses one.</p>
+          <div class="leads-list" id="leads-list"><p class="muted">Loading…</p></div>
+        </section>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="view hidden" data-view="settings">
+        <section class="panel">
+          <h2>Resume</h2>
+          <form id="resume-form" class="row">
+            <input type="file" name="resume" accept="application/pdf" required />
+            <button class="btn" type="submit">Upload new resume</button>
+            <span class="msg" id="resume-msg"></span>
+          </form>
+          <div class="row" style="margin-top:12px">
+            <input id="resume-name" type="text" value="${filename}" aria-label="Download filename" spellcheck="false" style="min-width:260px;flex:1 1 260px" />
+            <button class="btn ghost" id="name-btn" type="button">Save download name</button>
+            <span class="msg" id="name-msg"></span>
+          </div>
+          <p class="muted" style="margin:10px 0 0">Served as <strong id="name-shown">${filename}</strong> at <code>/resume</code>. Name change is immediate; the file updates within ~5&nbsp;min. <code>.pdf</code> is added automatically.</p>
+        </section>
+
+        <section class="panel">
+          <h2>Export data (CSV)</h2>
+          <div class="row" id="exports">
+            <button class="btn ghost" type="button" data-export="leads">Leads</button>
+            <button class="btn ghost" type="button" data-export="events">Events (current range)</button>
+            <button class="btn ghost" type="button" data-export="daily">Daily totals (current range)</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Danger zone</h2>
+          <div class="row">
+            <button class="btn danger" id="reset-btn" type="button">Reset all analytics</button>
+            <span class="msg" id="reset-msg"></span>
+          </div>
+          <p class="muted" style="margin:10px 0 0">Clears analytics events only. Leads and your resume are kept.</p>
+        </section>
+      </section>
+    </main>
   </div>
-  <form method="POST" action="/admin/logout" style="margin:0"><button class="btn secondary" type="submit">Log out</button></form>
-</header>
-<main>
-  <div class="cards">
-    <div class="card">
-      <div class="card-top"><span class="l">Page views</span><span id="pv-delta"></span></div>
-      <div class="n" id="pv">-</div>
-      <div class="spark" id="pv-spark"></div>
-      <div class="sub">all-time <b id="pv-all">-</b></div>
-    </div>
-    <div class="card">
-      <div class="card-top"><span class="l">Unique visitors</span><span id="uv-delta"></span></div>
-      <div class="n" id="uv">-</div>
-      <div class="spark" id="uv-spark"></div>
-      <div class="sub">all-time <b id="uv-all">-</b></div>
-    </div>
-    <div class="card">
-      <div class="card-top"><span class="l">Resume downloads</span><span id="dl-delta"></span></div>
-      <div class="n" id="dl">-</div>
-      <div class="spark" id="dl-spark"></div>
-      <div class="sub">all-time <b id="dl-all">-</b></div>
-    </div>
-    <div class="card">
-      <div class="card-top"><span class="l">Downloads / 100 visitors</span><span id="cv-delta"></span></div>
-      <div class="n" id="cv">-</div>
-      <div class="spark" id="cv-spark"></div>
-      <div class="sub">resume conversion rate</div>
-    </div>
-  </div>
-
-  <section class="panel">
-    <h2>Engagement</h2>
-    <div class="stats">
-      <div class="stat"><div class="l">Sessions</div><div class="v" id="eg-sessions">-</div></div>
-      <div class="stat"><div class="l">Bounce rate</div><div class="v" id="eg-bounce">-</div></div>
-      <div class="stat"><div class="l">Avg. session</div><div class="v" id="eg-dur">-</div></div>
-      <div class="stat"><div class="l">New visitors</div><div class="v" id="eg-new">-</div></div>
-      <div class="stat"><div class="l">Returning</div><div class="v" id="eg-ret">-</div></div>
-    </div>
-    <p class="muted" style="margin:10px 0 0">Sessions group a visitor's pageviews within a 30-min window. A bounce is a single-pageview session.</p>
-  </section>
-
-  <section class="panel">
-    <h2>Traffic trend</h2>
-    <div id="trend"></div>
-  </section>
-
-  <section class="panel">
-    <h2>When visitors come (hour × day)</h2>
-    <div id="heatmap"></div>
-  </section>
-
-  <section class="panel">
-    <div class="panel-head">
-      <h2>Leads <span class="badge" id="leads-badge" style="display:none"></span></h2>
-      <button class="btn secondary" id="leads-seen-btn" type="button">Mark all read</button>
-    </div>
-    <p class="muted" style="margin:-4px 0 10px">Every contact-form submission is stored here — <b id="leads-total">-</b> total. You're notified by email too, but this list never misses one.</p>
-    <div class="leads-list" id="leads-list"><p class="muted">Loading…</p></div>
-  </section>
-
-  <div class="grid2">
-    <section class="panel"><h2>Top interactions (CTA clicks)</h2><div id="interactions"></div></section>
-    <section class="panel"><h2>Scroll depth</h2><div id="scroll"></div></section>
-  </div>
-
-  <div class="grid2">
-    <section class="panel">
-      <h2>Traffic sources</h2>
-      <p class="muted" style="margin:-4px 0 10px">Tag the links you share, e.g. <code>?ref=linkedin</code> · <code>?ref=resume</code>. Untagged visits fall back to the referrer.</p>
-      <div id="channels"></div>
-    </section>
-    <section class="panel">
-      <h2>Audience</h2>
-      <p class="muted" style="margin:-4px 0 10px">From <code>?aud=</code> tags you add, e.g. <code>?ref=linkedin&amp;aud=recruiter</code> · <code>?aud=hr</code>.</p>
-      <div id="audiences"></div>
-    </section>
-  </div>
-
-  <div class="grid2">
-    <section class="panel"><h2>Top pages</h2><div id="pages"></div></section>
-    <section class="panel"><h2>Section engagement</h2><div id="sections"></div></section>
-  </div>
-
-  <div class="grid2">
-    <section class="panel"><h2>Countries</h2><div id="countries"></div></section>
-    <section class="panel"><h2>Cities</h2><div id="cities"></div></section>
-  </div>
-
-  <div class="grid2">
-    <section class="panel"><h2>States / regions</h2><div id="regions"></div></section>
-    <section class="panel"><h2>Referrer hosts</h2><div id="referrers"></div></section>
-  </div>
-
-  <div class="grid3">
-    <section class="panel"><h2>Devices</h2><div id="devices"></div></section>
-    <section class="panel"><h2>Browsers</h2><div id="browsers"></div></section>
-    <section class="panel"><h2>Operating systems</h2><div id="os"></div></section>
-  </div>
-
-  <section class="panel">
-    <h2>Resume</h2>
-    <form id="resume-form" class="row">
-      <input type="file" name="resume" accept="application/pdf" required />
-      <button class="btn" type="submit">Upload new resume</button>
-      <span class="msg" id="resume-msg"></span>
-    </form>
-    <div class="row" style="margin-top:12px">
-      <input id="resume-name" type="text" value="${filename}" aria-label="Download filename" spellcheck="false" />
-      <button class="btn secondary" id="name-btn" type="button">Save download name</button>
-      <span class="msg" id="name-msg"></span>
-    </div>
-    <p class="muted" style="margin:10px 0 0">Served as <strong id="name-shown">${filename}</strong> at <code>/resume</code>. Changing the name takes effect immediately; the file itself updates within ~5&nbsp;min (cache / hard refresh). <code>.pdf</code> is added automatically.</p>
-  </section>
-
-  <section class="panel">
-    <h2>Export data (CSV)</h2>
-    <div class="row" id="exports">
-      <button class="btn secondary" type="button" data-export="leads">Leads</button>
-      <button class="btn secondary" type="button" data-export="events">Events (current range)</button>
-      <button class="btn secondary" type="button" data-export="daily">Daily totals (current range)</button>
-    </div>
-  </section>
-
-  <section class="panel">
-    <h2>Danger zone</h2>
-    <div class="row">
-      <button class="btn danger" id="reset-btn" type="button">Reset all analytics</button>
-      <span class="msg" id="reset-msg"></span>
-    </div>
-  </section>
-</main>
+</div>
+<div class="overlay" id="overlay"></div>
 <script>${DASHBOARD_JS}</script>
 </body>
 </html>`;
