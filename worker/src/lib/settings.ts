@@ -42,3 +42,20 @@ export async function setResumeFilename(env: Env, raw: unknown): Promise<string 
   await env.SESSIONS.put(RESUME_NAME_KEY, name);
   return name;
 }
+
+// Timestamp (epoch ms) of the last time leads were marked "read" in the admin UI.
+// Lives in KV so the unread badge survives redeploys. 0 = nothing seen yet.
+const LEADS_SEEN_KEY = 'config:leads_seen_ts';
+
+export async function getLeadsSeenTs(env: Env): Promise<number> {
+  try {
+    const v = await env.SESSIONS.get(LEADS_SEEN_KEY);
+    return v ? Number(v) || 0 : 0;
+  } catch {
+    return 0;
+  }
+}
+
+export async function setLeadsSeenTs(env: Env, ts: number): Promise<void> {
+  await env.SESSIONS.put(LEADS_SEEN_KEY, String(ts));
+}

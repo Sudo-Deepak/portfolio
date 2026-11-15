@@ -193,9 +193,38 @@ const jsonLd = {
             vid = null;
           }
 
-          // Send as text/plain so the browser skips the CORS preflight.
+          // Per-visit session id (sessionStorage), refreshed on a 30-min inactivity
+          // window so sessions/bounce/duration can be computed server-side.
+          var sid = null;
+          var SESSION_GAP = 30 * 60 * 1000;
+          function newId() {
+            return (crypto.randomUUID && crypto.randomUUID()) ||
+              String(Date.now()) + Math.random().toString(16).slice(2);
+          }
+          try {
+            var now = Date.now();
+            var last = +sessionStorage.getItem('pf_sid_ts') || 0;
+            sid = sessionStorage.getItem('pf_sid');
+            if (!sid || now - last > SESSION_GAP) sid = newId();
+            sessionStorage.setItem('pf_sid', sid);
+            sessionStorage.setItem('pf_sid_ts', String(now));
+          } catch (e) {
+            sid = null;
+          }
+          function touchSession() {
+            try {
+              sessionStorage.setItem('pf_sid_ts', String(Date.now()));
+            } catch (e) {
+              /* no-op */
+            }
+          }
+
+          // Send as text/plain so the browser skips the CORS preflight. vid + sid are
+          // attached centrally so every event carries them.
           function send(payload) {
             try {
+              payload.vid = vid;
+              payload.sid = sid;
               var body = JSON.stringify(payload);
               if (navigator.sendBeacon) {
                 navigator.sendBeacon(endpoint, new Blob([body], { type: 'text/plain' }));
@@ -206,6 +235,13 @@ const jsonLd = {
               /* never let analytics break the page */
             }
           }
+
+          // Public hook for custom events (CTA clicks, contact submits, scroll depth).
+          // Used by components via data-track and by the contact form.
+          window.pfTrack = function (type, label) {
+            touchSession();
+            send({ type: type, path: location.pathname, label: label || null, qs: location.search });
+          };
 
           // 1) Pageview. `qs` carries any ?ref=/?aud= link tags for source attribution.
           send({ type: 'pageview', vid: vid, path: location.pathname, ref: document.referrer, qs: location.search });
@@ -245,9 +281,57 @@ const jsonLd = {
             sections.forEach(function (el) { io2.observe(el); });
           }
 
-          // Flush any pending section views before the page goes away.
+          // 3) CTA clicks — any element tagged with data-track fires a cta_click.
+          document.addEventListener(
+            'click',
+            function (e) {
+              var el = e.target && e.target.closest ? e.target.closest('[data-track]') : null;
+              if (!el) return;
+              var label = el.getAttribute('data-track');
+              if (label) {
+                touchSession();
+                send({ type: 'cta_click', path: location.pathname, label: label, qs: location.search });
+              }
+            },
+            true
+          );
+
+          // 4) Scroll depth — fire once per 25/50/75/100% milestone.
+          var depthsSent = {};
+          var pendingDepth = null;
+          function onScroll() {
+            var doc = document.documentElement;
+            var scrollable = doc.scrollHeight - window.innerHeight;
+            if (scrollable <= 0) return;
+            var pct = (window.scrollY || doc.scrollTop) / scrollable * 100;
+            var marks = [25, 50, 75, 100];
+            for (var i = 0; i < marks.length; i++) {
+              if (pct >= marks[i] && !depthsSent[marks[i]]) {
+                depthsSent[marks[i]] = true;
+                pendingDepth = marks[i];
+              }
+            }
+          }
+          function flushDepth() {
+            if (pendingDepth == null) return;
+            var d = pendingDepth;
+            pendingDepth = null;
+            touchSession();
+            send({ type: 'scroll_depth', path: location.pathname, label: String(d), qs: location.search });
+          }
+          var depthTimer = null;
+          window.addEventListener(
+            'scroll',
+            function () {
+              onScroll();
+              if (!depthTimer) depthTimer = setTimeout(function () { depthTimer = null; flushDepth(); }, 1500);
+            },
+            { passive: true }
+          );
+
+          // Flush any pending section views + scroll depth before the page goes away.
           document.addEventListener('visibilitychange', function () {
-            if (document.visibilityState === 'hidden') flush();
+            if (document.visibilityState === 'hidden') { flush(); flushDepth(); }
           });
         } catch (e) {
           /* analytics is best-effort; swallow everything */
