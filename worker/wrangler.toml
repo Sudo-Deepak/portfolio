@@ -14,11 +14,9 @@ RESUME_FILENAME = "Deepak_Kumar_Senior_Java_Developer.pdf"
 RESUME_OBJECT_KEY = "resume.pdf"
 ALLOWED_ORIGIN = "https://sudo-deepak.github.io"
 SESSION_TTL_SECONDS = "28800"
-# Contact-form lead notifications (sent via Resend). The lead is always stored in
-# D1 regardless; email is best-effort. LEAD_FROM_EMAIL can stay as Resend's shared
-# sender until a custom domain is verified.
-LEAD_NOTIFY_EMAIL = "deepakprajapati.work@gmail.com"
-LEAD_FROM_EMAIL = "onboarding@resend.dev"
+# Contact-form lead notifications are sent server-side via FormSubmit (see
+# src/lib/email.ts). The destination identifier lives in the FORMSUBMIT_CODE secret,
+# never here. The lead is always stored in D1 regardless; email is best-effort.
 
 # Analytics (SQLite). Fill database_id after `wrangler d1 create portfolio_analytics`.
 [[d1_databases]]
@@ -35,5 +33,5 @@ id = "4b3aeceb990d4dbe9b62e43224d09cba"
 
 # Secrets (set via `wrangler secret put`, NEVER committed):
 #   ADMIN_USERNAME, ADMIN_PASSWORD_HASH, SESSION_SECRET
-#   RESEND_API_KEY   -- Resend API key for contact-form lead emails (optional; leads
-#                       are still captured in D1 + the admin dashboard without it)
+#   FORMSUBMIT_CODE  -- FormSubmit email or activated hash for lead emails (optional;
+#                       leads are still captured in D1 + the admin dashboard without it)
