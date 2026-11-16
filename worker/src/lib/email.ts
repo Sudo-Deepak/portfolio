@@ -10,57 +10,53 @@ export interface LeadEmail {
   region: string | null;
 }
 
-function esc(s: string): string {
-  return String(s ?? '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c] as string);
-}
-
-// Send a lead notification via Resend. Best-effort: returns true on a 2xx response,
-// false on any failure (missing key, network error, non-2xx). Never throws — the
-// lead is already durably stored in D1 before this is called.
+// Lead notification via FormSubmit, called SERVER-SIDE from the Worker (never the
+// browser) over HTTPS/TLS. Security posture:
+//   - the browser never talks to FormSubmit; it only POSTs to our same-origin
+//     /contact endpoint (origin-checked, honeypot + rate-limited);
+//   - the FormSubmit identifier lives in the FORMSUBMIT_CODE secret, so it is never
+//     exposed in the client bundle or the repo;
+//   - the outbound call is HTTPS with an 8s timeout so a slow upstream can't hang
+//     the request.
+// Best-effort: returns true only on a 2xx + {success:"true"} response; never throws —
+// the lead is already durably stored in D1 before this runs.
 export async function sendLeadEmail(env: Env, lead: LeadEmail): Promise<boolean> {
-  if (!env.RESEND_API_KEY) return false;
-  const to = env.LEAD_NOTIFY_EMAIL;
-  const from = env.LEAD_FROM_EMAIL || 'onboarding@resend.dev';
-  if (!to) return false;
+  const code = env.FORMSUBMIT_CODE;
+  if (!code) return false;
 
   const loc = [lead.city, lead.region, lead.country].filter(Boolean).join(', ') || 'Unknown';
   const source = lead.channel || 'Direct';
 
-  const text =
-    `New portfolio lead\n\n` +
-    `Name: ${lead.name}\n` +
-    `Email: ${lead.email}\n` +
-    `Source: ${source}\n` +
-    `Location: ${loc}\n\n` +
-    `Message:\n${lead.message}\n`;
+  // FormSubmit AJAX payload. `email` becomes the reply-to; `_*` are FormSubmit
+  // directives (subject/layout/no-captcha).
+  const payload = {
+    name: lead.name,
+    email: lead.email,
+    _replyto: lead.email,
+    message: lead.message,
+    source,
+    location: loc,
+    _subject: ('New portfolio lead: ' + lead.name).slice(0, 120),
+    _template: 'table',
+    _captcha: 'false',
+  };
 
-  const html =
-    `<h2>New portfolio lead</h2>` +
-    `<p><strong>Name:</strong> ${esc(lead.name)}<br>` +
-    `<strong>Email:</strong> <a href="mailto:${esc(lead.email)}">${esc(lead.email)}</a><br>` +
-    `<strong>Source:</strong> ${esc(source)}<br>` +
-    `<strong>Location:</strong> ${esc(loc)}</p>` +
-    `<p><strong>Message:</strong></p>` +
-    `<p style="white-space:pre-wrap">${esc(lead.message)}</p>`;
-
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 8000);
   try {
-    const res = await fetch('https://api.resend.com/emails', {
+    const res = await fetch('https://formsubmit.co/ajax/' + encodeURIComponent(code), {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${env.RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from,
-        to,
-        reply_to: lead.email,
-        subject: `New lead: ${lead.name}`.slice(0, 120),
-        text,
-        html,
-      }),
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(payload),
+      signal: ctrl.signal,
     });
-    return res.ok;
+    if (!res.ok) return false;
+    const data = (await res.json().catch(() => null)) as { success?: unknown } | null;
+    // FormSubmit returns { success: "true", ... } on a delivered submission.
+    return !!data && (data.success === true || String(data.success) === 'true');
   } catch {
     return false;
+  } finally {
+    clearTimeout(timer);
   }
 }
